@@ -7,7 +7,7 @@ from snakemq.storage.sqlite import SqliteQueuesStorage
 from snakemq.message import FLAG_PERSISTENT
 
 def on_recv(conn, ident, message):
-    print message
+    print (message, ident, conn)
 
 my_link = snakemq.link.Link()
 my_packeter = snakemq.packeter.Packeter(my_link)
