@@ -26,6 +26,7 @@ def on_conn(conn, ident):
         time.sleep(1)
 
 my_messaging.on_connect.add(on_conn)
+#my_messaging.send_message("alice", message)
 
 print "ready to go"
 my_link.loop()
