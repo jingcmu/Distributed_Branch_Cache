@@ -1,5 +1,3 @@
-#!/usr/bin/env/python
-
 import socket
 import struct
 import threading
@@ -288,39 +286,86 @@ class BranchPeer:
 # **********************************************************
 
 
-
-
 class BranchPeerConnection:
+    def __init__( self, peerid=None, host, port, sock=None, debug=False ):
+        self.id = peerid
+        self.debug = debug
 
-    def __init__( self, peerid, host, port, sock=None, debug=False ):
+        if sock:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect ( (host, int(port)) )
+        else:
+            self.sock = sock
 
+        self.tempfile = self.sock.makefile( 'rw', 0 )
+
+    # def connect( self, num ):
+    #     self.sock.listen(num)
+    #     self.sock.accept()
 
     def __makemsg( self, msgtype, msgdata ):
-
+        msg = struct.pack ("!4sL%ds", len(msgdata), msgtype, len(msgdata), msgdata)
+        return msg
 
     def __debug( self, msg ):
+        if self.debug:
+            debughelper(msg)
 
-
+    
     def senddata( self, msgtype, msgdata ):
     """
     Send a message through a peer connection. Returns True on success
     or False if there was an error.
     """
+        try:
+            msg = self.__makemsg(msgtype, msgdata)
+            self.tempfile.write(msg)
+            self.tempfile.flush()
+        except KeyboardInterrupt:
+            raise
+        except:
+            if self.debug:
+                traceback.print_exc()
+                return False
 
-
-
+        return True
     def recvdata( self ):
     """
     Receive a message from a peer connection. Returns (None, None)
     if there was any error.
     """
+        try:
+            msgtype = self.tempfile.read( 4 )
+            if not msgtype:
+                return (None, None)
+            lenstr = self.tempfile.read( 4 )
+            msglen = int ( struct.unpack( "!L", lenstr)[0] )
 
+            msg = ""
+            while len(msg) != msglen:
+                data = self.tempfile.read(min (1024, msglen - len(msg)))
+                if not len(data):
+                    break
+                msg += data
 
+            if len(msg) != msglen:
+                return (None, None)
+        except KeyboardInterrupt:
+            raise
+        except:
+            if self.debug:
+                traceback.print_exc()
+                return (None, None)
+        return (msgtype, msg)
 
     def close( self ):
     """
     Close the peer connection. The send and recv methods will not work
     after this call.
     """
+        self.sock.close()
+        self.sock = None
+        self.tempfile = None
 
     def __str__( self ):
+        return "{%s}" % peerid
