@@ -281,11 +281,11 @@ class BranchPeer:
 
 
 class BranchPeerConnection:
-    def __init__( self, peerid=None, host, port, sock=None, debug=False ):
+    def __init__( self, peerid, host, port, sock=None, debug=False ):
         self.id = peerid
         self.debug = debug
 
-        if sock:
+        if sock == None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect ( (host, int(port)) )
         else:
