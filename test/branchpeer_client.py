@@ -364,3 +364,6 @@ class BranchPeerConnection:
 
     def __str__( self ):
         return "{%s}" % self.peerid
+
+peer = BranchPeerConnection(1, "192.168.1.104", 80)
+peer.senddata("xxx", "lots of data")

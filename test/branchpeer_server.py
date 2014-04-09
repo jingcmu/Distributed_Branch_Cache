@@ -69,6 +69,7 @@ class BranchPeer:
 
         try:
             msgtype, msgdata = peerconn.recvdata()
+            print msgtype, " ", msgdata
             if msgtype:
                 msgtype = msgtype.upper()
             if msgtype not in self.handlers:
@@ -364,3 +365,7 @@ class BranchPeerConnection:
 
     def __str__( self ):
         return "{%s}" % self.peerid
+
+
+peer = BranchPeer(5, 80)
+peer.mainloop()
