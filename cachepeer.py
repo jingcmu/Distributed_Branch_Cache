@@ -169,10 +169,10 @@ class CachePeer( BranchPeer ):
 
 
     def buildpeers(self, host, port, hops=1):
-    """ Build the local peer list up to the limit stored by
-    self.maxpeers, using a simple depth-first search given an
-    initial host and port as starting point. The depth of the
-    search is limited by the hops parameter. """
+		""" Build the local peer list up to the limit stored by
+		self.maxpeers, using a simple depth-first search given an
+		initial host and port as starting point. The depth of the
+		search is limited by the hops parameter. """
         if self.maxpeersreached() or not hops:
             return
         peerid = None
@@ -197,12 +197,3 @@ class CachePeer( BranchPeer ):
             if self.__debug():
                 traceback.print_exc()
                 self.removepeer(peerid)
-
-
-
-
-
-
-
-
-
