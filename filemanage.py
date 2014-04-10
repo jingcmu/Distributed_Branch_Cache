@@ -67,7 +67,7 @@ class FileManager:
 		print "combine finished"
 
 	def md5_for_file(self, pathfilename, block_size=2**20):
-		""" to get md5 hash for a file """
+		""" to get md5 hash for a file, return string """
 		md5 = hashlib.md5()
 		with open(pathfilename, "rb") as f:
 			while True:
