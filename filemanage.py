@@ -1,4 +1,5 @@
 import os
+import hashlib
 
 class FileManager:
     def __init__( self, size, debug=False ):
@@ -9,7 +10,7 @@ class FileManager:
     def openfile(self, filename):
         self.filehandler = open(filename)
 
-	def split(pathfilename, chunksize):
+	def split(self, pathfilename, chunksize):
 		#split a file into many small files with chunksize bytes
 		#the small files will be put into \tmp under local path
 		statinfo = os.stat(pathfilename)
@@ -32,7 +33,7 @@ class FileManager:
 					break
 		print "split finished"
 
-	def combine(pathfilename, filesize, chunksize):
+	def combine(self, pathfilename, filesize, chunksize):
 		# pathfilename: this is the file path outside \tmp folder
 		# filesize: how many bytes are in the file, this should be known beforehand
 		# chunksize: how many kb for one chunk, default 512 kb
@@ -64,6 +65,17 @@ class FileManager:
 				else:
 					print "missing part " + str(i)
 		print "combine finished"
+
+	def md5_for_file(self, pathfilename, block_size=2**20):
+		""" to get md5 hash for a file """
+		md5 = hashlib.md5()
+		with open(pathfilename, "rb") as f:
+			while True:
+				data = f.read(block_size)
+				if not data:
+					break
+				md5.update(data)
+		return md5.hexdigest()
 
     #close a file
     def close( self ):
