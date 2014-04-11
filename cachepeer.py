@@ -1,4 +1,4 @@
-#! /usr/bin/env/python
+#! /usr/bin/python
 
 from branchpeer import *
 # support query type list as follow
@@ -27,8 +27,6 @@ class CachePeer( BranchPeer ):
             FILEGET: self.__fileget_handler,
             QUIT:   self.__quit_handler,
             NAME:   self.__name_handler,
-            ERROR:  self.__error_handler,
-            REPLY:  self.__reply_handler
         }
         for msgtype in handlers:
             self.addhandler(msgtype, handlers[msgtype])
@@ -73,8 +71,8 @@ class CachePeer( BranchPeer ):
                     peerconn.senddata(ERROR, 'Join: peer %s has already added' % pid)
             except:
                 peerconn.senddata( ERROR, 'Join: invalid request arguments')
-            finally:
-                self.peerlock.release()
+        finally:
+            self.peerlock.release()
 
     def __query_handler(self, peerconn, data):
         """handle query message, QUERY, data format : "peer-id  keyword  ttl" """
@@ -163,16 +161,13 @@ class CachePeer( BranchPeer ):
 
     def addfile( self, filename ):
         """add file into local cache based on LRU policy"""
+        self.cachefile[filename] = None
 
     def removefile(sefl, filename):
         """remove file from the local cache based on LRU policy """
 
 
     def buildpeers(self, host, port, hops=1):
-    """ Build the local peer list up to the limit stored by
-    self.maxpeers, using a simple depth-first search given an
-    initial host and port as starting point. The depth of the
-    search is limited by the hops parameter. """
         if self.maxpeersreached() or not hops:
             return
         peerid = None
@@ -194,7 +189,7 @@ class CachePeer( BranchPeer ):
                 if nextpid != self.myid:
                     self.buildpeers(host, port, hops-1)
         except:
-            if self.__debug():
+            if self.debug:
                 traceback.print_exc()
                 self.removepeer(peerid)
 

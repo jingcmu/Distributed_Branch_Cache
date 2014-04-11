@@ -39,6 +39,9 @@ class BranchPeer:
             self.myid = myid
         else:
             self.myid = '%s:%d' % (self.serverhost, self.serverport)
+        
+        self.peerlock = threading.Lock()
+
         # list (dictionary/hash table) of known peers
         self.peers = {}
 
