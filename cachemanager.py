@@ -50,7 +50,10 @@ class CacheManager:
             f.close()
 
     def LRUmaintain(self, hashcode):
-        return
+        for i in xrange(len(self.LRU)):
+            if self.LRU[i] == hashcode:
+                self.LRU.remove(hashcode)
+                self.LRU.insert(0, hashcode)
 
     def findFile(self, hashcode, delet = False):
         # delet: whether delete the file record

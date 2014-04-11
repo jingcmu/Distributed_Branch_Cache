@@ -56,7 +56,10 @@ class CacheManager:
             f.close()
 
     def LRUmaintain(self, hashcode):
-        return
+        for i in xrange(len(self.LRU)):
+            if self.LRU[i] == hashcode:
+                self.LRU.remove(hashcode)
+                self.LRU.insert(0, hashcode)
 
     def findFile(self, hashcode, delet = False):
         # delet: whether delete the file record
@@ -69,8 +72,11 @@ class CacheManager:
         return None
 
 cache = CacheManager('E:\moive', 'cachelog.txt', 2147483648) # 2147483648 is 2G
-print cache.getSize()
-print cache.initLRU()
-print cache.findFile('b11d16fd0a6e821adf47fd819b718ac5')
-cache.updateCache()
-print cache.filecount
+#print cache.getSize()
+#print cache.initLRU()
+#print cache.findFile('b11d16fd0a6e821adf47fd819b718ac5')
+#cache.updateCache()
+#print cache.filecount
+print cache.LRU
+cache.LRUmaintain("eadfk8af7589acdffa7e69f960s0f9i9")
+print cache.LRU
