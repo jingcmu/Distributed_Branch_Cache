@@ -192,12 +192,3 @@ class CachePeer( BranchPeer ):
             if self.debug:
                 traceback.print_exc()
                 self.removepeer(peerid)
-
-
-
-
-
-
-
-
-
