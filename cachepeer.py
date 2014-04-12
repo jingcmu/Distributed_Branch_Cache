@@ -192,3 +192,28 @@ class CachePeer( BranchPeer ):
             if self.debug:
                 traceback.print_exc()
                 self.removepeer(peerid)
+    
+    # get just some chunks of file indicated by chunkRange, not the whole file
+    # 4/12 updated
+    def __filechunkget_handler(self, peerconn, data, chunkRange):
+        """handle file get message by a range of chunk """
+        pathfilename = data
+        chunkStart, chunkEnd = chunkRange
+        statinfo = os.stat(pathfilename)
+        path, filename = os.path.split(pathfilename)
+        tmppath = path + '\\tmp'
+        
+        if filename not in self.cachefile:
+            peerconn.senddata( ERROR, 'File not found')
+            return
+        try:
+        	  while chunkStart <= chunkEnd:
+        	      fn = "%s\%s.part.%d" % (tmppath, filename, chunkStart)
+        	      chunkStart += 1
+        	      fd = open(fn, 'rb')
+        	      filedata = fd.read()
+        	      peerconn.senddata(REPLY, filedata)
+        	      fd.close()
+        except:
+            peerconn.senddata( ERROR, 'Error reading file')
+            return
