@@ -22,7 +22,7 @@ class BranchPeer:
         (serverhost) will be determined by attempting to connect to an
         Internet host like Google.
         """
-        self.debug = 0
+        self.debug = 1
 
         self.maxpeers = int(maxpeers)
         self.serverport = int(serverport)
