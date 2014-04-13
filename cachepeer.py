@@ -113,12 +113,18 @@ class CachePeer( BranchPeer ):
         """handle response message, RESP, data format should be "file-name, peer-id" """   
         try:
             filename, filepeerid = data.split()
-            if filename in self.cachefile:
+            if ( filename in self.cachefile and not self.cachefile[filename]):
                 pass
             else:
-                self.cachefile[filename] = filepeerid
+                if filename not in  self.cachefile:
+                    self.cachefile[filename] = []
+                    self.cachefile[filename].append(filepeerid)
+                else:
+                    self.cachefile[filename].append(filepeerid)
+
         except:
             traceback.print_exc()
+
     def __fileget_handler(self, peerconn, data):
         """handle file get message, FILEGET data format should  a string "file-name" """
         filename = data

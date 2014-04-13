@@ -217,8 +217,6 @@ class BranchPeer:
                 onereply = peerconn.recvdata()
             while (onereply != (None,None)):
                 msgreply.append( onereply )
-                self.__debug( 'Got reply %s: %s' 
-                  % ( pid, str(msgreply) ) )
                 onereply = peerconn.recvdata()
             peerconn.close()
         except KeyboardInterrupt:
