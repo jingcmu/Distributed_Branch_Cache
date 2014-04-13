@@ -113,10 +113,15 @@ class CachePeer( BranchPeer ):
         """handle response message, RESP, data format should be "file-name, peer-id" """   
         try:
             filename, filepeerid = data.split()
-            if ( filename in self.cachefile and self.cachefile[filename] == filepeerid ):
+            if ( filename in self.cachefile and not self.cachefile[filename]):
                 pass
             else:
-                self.cachefile[filename] = filepeerid
+                if filename not in  self.cachefile:
+                    self.cachefile[filename] = []
+                    self.cachefile[filename].append(filepeerid)
+                else:
+                    self.cachefile[filename].append(filepeerid)
+
         except:
             traceback.print_exc()
 
@@ -139,15 +144,16 @@ class CachePeer( BranchPeer ):
             peerconn.senddata( ERROR, 'Error reading file')
             return
 
-        peerconn.senddata(REPLY, filedata)
+        peerconn.senddata( REPLY, filedata)
+
 
     def __delete_handler(self, peerconn, data):
         """handle delete file request, data format should be "filename, peer-id" """
         try:
             filename, filepeerid = data.split()
-            if filename in self.cachefile and self.cachefile[filename] == filepeerid:
-                del self.cachefile[filename]
-                peerconn.senddata(REPLY, "del file: %s" % filename)
+            if filename in self.cachefile and filepeerid in self.cachefile[filename]:
+                self.cachefile[filename].remove(filepeerid)
+                peerconn.senddata(REPLY, "del file: %s %s" % (filename, filepeerid))
             else:
                 pass
         except:

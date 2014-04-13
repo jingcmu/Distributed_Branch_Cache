@@ -48,7 +48,10 @@ class DBCGui(Frame):
             pid = self.cachepeer.cachefile[filename]
             if not pid:
                 pid = '(local)'
-            self.fileList.insert( END, "%s:%s" % (filename, pid))
+                self.fileList.insert( END, "%s:%s" % (filename, pid))
+            else:
+                for p in pid:
+                    self.fileList.insert( END, "%s:%s" % (filename, p))
     
     def creatWidgets( self ):
 
