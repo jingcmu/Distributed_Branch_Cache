@@ -22,7 +22,7 @@ class BranchPeer:
         (serverhost) will be determined by attempting to connect to an
         Internet host like Google.
         """
-        self.debug = 1
+        self.debug = 0
 
         self.maxpeers = int(maxpeers)
         self.serverport = int(serverport)
@@ -257,7 +257,7 @@ class BranchPeer:
 
     def mainloop( self ):
         s = self.makeserversocket( self.serverport )
-        s.settimeout(2)
+        s.settimeout(5)
 
         while not self.shutdown:
             try:
