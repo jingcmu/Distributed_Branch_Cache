@@ -85,6 +85,10 @@ class DBCGui(Frame):
                        command=self.onFetch)
         self.fetchButton.grid()
 
+        self.deleteButton = Button( fileFrame, text='Delete',
+                       command=self.onDelete)
+        self.deleteButton.grid()
+
         self.addfileEntry = Entry(addfileFrame, width=25)
         self.addfileButton = Button(addfileFrame, text='Add',
                        command=self.onAdd)
@@ -128,6 +132,14 @@ class DBCGui(Frame):
             self.cachepeer.addfile(filename)
         self.addfileEntry.delete(0, len(file))
         self.updateFileList()
+
+    def onDelete( self ):
+        selections = self.fileList.curselection()
+        if len(selections) == 1:
+            selection = self.fileList.get(selections[0]).split(':')
+            if len(selection) == 2:
+                filename = selection[0]
+                del self.cachepeer.cachefile[filename]
 
     def onSearch( self ):
         key = self.searchEntry.get()
