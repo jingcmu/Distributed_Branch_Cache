@@ -213,9 +213,6 @@ class BranchPeer:
         try:
             peerconn = BranchPeerConnection( pid, host, port, debug=self.debug )
             peerconn.senddata( msgtype, msgdata )
-
-            self.__debug( 'Sent %s: %s' % (pid, msgtype) )
-
             if waitreply:
                 onereply = peerconn.recvdata()
             while (onereply != (None,None)):
