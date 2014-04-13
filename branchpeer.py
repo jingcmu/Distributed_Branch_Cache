@@ -214,10 +214,14 @@ class BranchPeer:
             peerconn = BranchPeerConnection( pid, host, port, debug=self.debug )
             peerconn.senddata( msgtype, msgdata )
 
+            self.__debug( 'Sent %s: %s' % (pid, msgtype) )
+
             if waitreply:
                 onereply = peerconn.recvdata()
             while (onereply != (None,None)):
                 msgreply.append( onereply )
+                self.__debug( 'Got reply %s: %s' 
+                  % ( pid, str(msgreply) ) )
                 onereply = peerconn.recvdata()
             peerconn.close()
         except KeyboardInterrupt:

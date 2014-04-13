@@ -77,7 +77,7 @@ class CachePeer( BranchPeer ):
     def __query_handler(self, peerconn, data):
         """handle query message, QUERY, data format : "peer-id  keyword  ttl" """
         try:
-            pid, key, ttl = data.split()
+            peerid, key, ttl = data.split()
             peerconn.senddata( REPLY, 'Query Ack: %s' % key)
         except:
             peerconn.senddata( ERROR, 'Query : invalid arguments')
