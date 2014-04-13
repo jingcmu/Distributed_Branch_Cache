@@ -156,6 +156,7 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port = selection
+                print selection
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 if len(resp) and resp[0][0] == REPLY:
                     fd = file(filename, 'w')

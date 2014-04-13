@@ -2,17 +2,24 @@
 
 from branchpeer import *
 # support query type list as follow
+<<<<<<< HEAD
 LIST = "LIST"       # list all available peer nodes
 JOIN = "JOIN"       # join the p2p network
 QUERY = "QUER"      # query file message
 RESP  = "RESP"      # response message
+=======
+LIST    = "LIST"       # list all available peer nodes
+JOIN    = "JOIN"       # join the p2p network
+QUERY   = "QUER"      # query file message
+RESP    = "RESP"      # response message
+>>>>>>> fbaf175d3f2aa8e833ba2035fc9531b9c65ea76d
 FILEGET = "FILE"    # fetch a file 
 QUIT    = "QUIT"    # quit the p2p network
 NAME    = "NAME"    # query a peer's id
 DELETE  = "DELE"    # delete local file
 
-ERROR  = "ERRO"    
-REPLY  = "REPL"
+ERROR   = "ERRO"    
+REPLY   = "REPL"
 
 class CachePeer( BranchPeer ):
 
@@ -140,11 +147,12 @@ class CachePeer( BranchPeer ):
 
         peerconn.senddata( REPLY, filedata)
 
+
     def __delete_handler(self, peerconn, data):
         """handle delete file request, data format should be "filename, peer-id" """
         try:
             filename, filepeerid = data.split()
-            if filename in self.cachefile:
+            if filename in self.cachefile and self.cachefile[filename] == filepeerid:
                 del self.cachefile[filename]
                 peerconn.senddata(REPLY, "del file: %s" % filename)
             else:
