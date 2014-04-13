@@ -142,7 +142,7 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) == 2:
                 filename = selection[0]
-                del self.cachepeer.cachefile[filename]
+                self.cachepeer.removefile(filename)
                 for pid in self.cachepeer.getpeerids(): 
                     self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (filename, self.cachepeer.myid) )
 
@@ -155,12 +155,10 @@ class DBCGui(Frame):
 
     def onFetch( self ):
         selections = self.fileList.curselection()
-        print len(selections)
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port = selection
-                print selection
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 if len(resp) and resp[0][0] == REPLY:
                     fd = file(filename, 'w')

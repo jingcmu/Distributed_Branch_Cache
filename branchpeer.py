@@ -3,6 +3,7 @@ import struct
 import threading
 import time
 import traceback
+import os
 
 
 def debughelper( msg ):

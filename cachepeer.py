@@ -185,9 +185,10 @@ class CachePeer( BranchPeer ):
         """add file into local cache based on LRU policy"""
         self.cachefile[filename] = None
 
-    def removefile(sefl, filename):
+    def removefile(self, filename):
         """remove file from the local cache based on LRU policy """
-
+        del self.cachefile[filename]
+        os.remove(filename)
 
     def buildpeers(self, host, port, hops=1):
         if self.maxpeersreached() or not hops:
