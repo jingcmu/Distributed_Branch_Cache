@@ -158,7 +158,6 @@ class DBCGui(Frame):
                 filename, host, port = selection
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 if len(resp) and resp[0][0] == REPLY:
-
                     fd = file(filename, 'w')
                     fd.write(resp[0][1])
                     fd.close()

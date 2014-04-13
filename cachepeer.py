@@ -6,7 +6,7 @@ LIST = "LIST"       # list all available peer nodes
 JOIN = "JOIN"       # join the p2p network
 QUERY = "QUER"      # query file message
 RESP  = "RESP"      # response message
-FILEGET = "FGET"    # fetch a file 
+FILEGET = "FILE"    # fetch a file 
 QUIT    = "QUIT"    # quit the p2p network
 NAME    = "NAME"    # query a peer's id
 DELETE  = "DELE"    # delete local file
@@ -138,14 +138,15 @@ class CachePeer( BranchPeer ):
             peerconn.senddata( ERROR, 'Error reading file')
             return
 
+        peerconn.senddata( REPLY, filedata)
+
     def __delete_handler(self, peerconn, data):
         """handle delete file request, data format should be "filename, peer-id" """
         try:
             filename, filepeerid = data.split()
             if filename in self.cachefile:
                 del self.cachefile[filename]
-                peerconn.senddata(REPLY, "del file: %s",  filename)
-                print self.cachefile
+                peerconn.senddata(REPLY, "del file: %s" % filename)
             else:
                 pass
         except:
