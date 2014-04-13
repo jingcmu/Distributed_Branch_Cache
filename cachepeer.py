@@ -144,13 +144,13 @@ class CachePeer( BranchPeer ):
             filename, filepeerid = data.split()
             if filename in self.cachefile:
                 del self.cachefile[filename]
+                peerconn.senddata(REPLY, "del file: %s",  filename)
+                print self.cachefile
             else:
                 pass
         except:
             traceback.print_exc()
 
-
-        peerconn.senddata(REPLY, filedata)
     def __quit_handler(self, peerconn, data):
         """handle peer quit message, data is not needed """
         self.peerlock.acquire()
