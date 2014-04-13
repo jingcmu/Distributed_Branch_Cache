@@ -140,6 +140,8 @@ class DBCGui(Frame):
             if len(selection) == 2:
                 filename = selection[0]
                 del self.cachepeer.cachefile[filename]
+                for pid in self.cachepeer.getpeerids(): 
+                    self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (self.cachepeer.myid, filename) )
 
     def onSearch( self ):
         key = self.searchEntry.get()
