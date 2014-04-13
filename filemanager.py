@@ -2,15 +2,19 @@ import os
 import hashlib
 
 class FileManager:
-    def __init__( self, size, debug=False ):
-        self.spacesize = size # space size of cache
+    def __init__( self, filesize, chunksize, debug=False ):
         self.filehandler = None
+		self.filesize = filesize
+		self.chunksize = chunksize
+		self.chunkCount = (filesize + chunksize - 1)/chunksize
+		self.receivedChunkSigns = [False] * self.chunksize
+	    self.receivedChunkCount = 0
 
     #open a file and get the file handler
     def openfile(self, filename):
         self.filehandler = open(filename)
 
-	def split(self, pathfilename, chunksize):
+	def splitFile(self, pathfilename, chunksize):
 		#split a file into many small files with chunksize bytes
 		#the small files will be put into \tmp under local path
 		statinfo = os.stat(pathfilename)
@@ -33,7 +37,7 @@ class FileManager:
 					break
 		print "split finished"
 
-	def combine(self, pathfilename, filesize, chunksize):
+	def combineFile(self, pathfilename, filesize, chunksize):
 		# pathfilename: this is the file path outside \tmp folder
 		# filesize: how many bytes are in the file, this should be known beforehand
 		# chunksize: how many kb for one chunk, default 512 kb
@@ -77,9 +81,31 @@ class FileManager:
 				md5.update(data)
 		return md5.hexdigest()
 
-    #close a file
-    def close( self ):
-        self.filehandler.close()
+    def requestFile(self, filename):
+		return
+    
+    def findCachedFile(self, filename):
+		return
+    
+    def responseFileExsistence(self, client):
+		return
+    	
+    def isFileReceived(self):
+        if receivedChunkCount < self.chunkCount:
+            return False;
+        else:
+            # recalculate chunkcount
+			chunkcount = 0
+            for sign in receivedChunkSigns:
+                if sign == True:
+                    chunkcount += 1
+            if chunkcount == self.chunkCount:
+				return True
+			else:
+				self.chunkCount = chunkcount
+				return False
+
+	
 
     def __debug( self, msg ):
         print msg
