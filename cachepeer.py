@@ -2,17 +2,10 @@
 
 from branchpeer import *
 # support query type list as follow
-<<<<<<< HEAD
-LIST = "LIST"       # list all available peer nodes
-JOIN = "JOIN"       # join the p2p network
-QUERY = "QUER"      # query file message
-RESP  = "RESP"      # response message
-=======
 LIST    = "LIST"       # list all available peer nodes
 JOIN    = "JOIN"       # join the p2p network
 QUERY   = "QUER"      # query file message
 RESP    = "RESP"      # response message
->>>>>>> fbaf175d3f2aa8e833ba2035fc9531b9c65ea76d
 FILEGET = "FILE"    # fetch a file 
 QUIT    = "QUIT"    # quit the p2p network
 NAME    = "NAME"    # query a peer's id
