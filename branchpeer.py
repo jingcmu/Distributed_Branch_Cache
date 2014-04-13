@@ -55,7 +55,7 @@ class BranchPeer:
     def __initserverhost( self ):
         """ using CMU server as host to determine local ip address. """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect (("www.cmu.edu", 80))
+        s.connect (("www.google.com", 80))
         self.serverhost = s.getsockname()[0]
         s.close()
 
@@ -301,9 +301,10 @@ class BranchPeerConnection:
     #     self.sock.accept()
 
     def __makemsg( self, msgtype, msgdata ):
-        msg = struct.pack ("!4sL%ds", len(msgdata), msgtype, len(msgdata), msgdata)
+        msglen = len(msgdata)
+        msg = struct.pack( "!4sL%ds" % msglen, msgtype, msglen, msgdata )
         return msg
-
+        
     def __debug( self, msg ):
         if self.debug:
             debughelper(msg)

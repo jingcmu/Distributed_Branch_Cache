@@ -171,12 +171,15 @@ class CachePeer( BranchPeer ):
         if self.maxpeersreached() or not hops:
             return
         peerid = None
+        self.__debug("Building peers from (%s,%s)" % (host,port))
         try:
             _, peerid = self.connectandsend(host, port, NAME, '')[0]
-
+            
+            self.__debug("contacted " + peerid)
             resp = self.connectandsend(host, port, JOIN, '%s %s %d' %
                     (self.myid, self.serverhost, self.serverport))[0]
 
+            self.__debug(str(resp))
             if ( resp[0] != REPLY ) or ( peerid in self.getpeerids() ):
                 return
 
@@ -184,7 +187,12 @@ class CachePeer( BranchPeer ):
 
             # do dfs search and add peers
             resp = self.connectandsend( host, port, LIST, '', pid=peerid)
+
             if len(resp) > 1:
+                resp.reverse()
+                resp.pop()    # get rid of header count reply
+
+            while len(resp):
                 nextpid, host, port = resp.pop()[1].split()
                 if nextpid != self.myid:
                     self.buildpeers(host, port, hops-1)
