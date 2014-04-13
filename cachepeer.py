@@ -4,14 +4,14 @@ from branchpeer import *
 # support query type list as follow
 LIST = "LIST"       # list all available peer nodes
 JOIN = "JOIN"       # join the p2p network
-QUERY = "QUERY"     # query file message
+QUERY = "QUER"     # query file message
 RESP  = "RESP"      # response message
-FILEGET = "FILEGET" # fetch a file 
+FILEGET = "FGET" # fetch a file 
 QUIT    = "QUIT"    # quit the p2p network
 NAME    = "NAME"    # query a peer's id
 
-ERROR  = "ERROR"    
-REPLY  = "REPLY"
+ERROR  = "ERRO"    
+REPLY  = "REPL"
 
 class CachePeer( BranchPeer ):
 
