@@ -78,7 +78,7 @@ class DBCGui(Frame):
         fileScroll = Scrollbar( fileListFrame, orient=VERTICAL )
         fileScroll.grid(row=0, column=1, sticky=N+S)
 
-        self.fileList = Listbox(fileListFrame, height=5, 
+        self.fileList = Listbox(fileListFrame, selectmode='multiple', height=5, 
                     yscrollcommand=fileScroll.set)
         #self.fileList.insert( END, 'a', 'b', 'c', 'd', 'e', 'f', 'g' )
         self.fileList.grid(row=0, column=0, sticky=N+S)
@@ -109,7 +109,7 @@ class DBCGui(Frame):
         peerScroll = Scrollbar( peerListFrame, orient=VERTICAL )
         peerScroll.grid(row=0, column=1, sticky=N+S)
 
-        self.peerList = Listbox(peerListFrame, height=5,
+        self.peerList = Listbox(peerListFrame, selectmode='multiple', height=5,
                     yscrollcommand=peerScroll.set)
         #self.peerList.insert( END, '1', '2', '3', '4', '5', '6' )
         self.peerList.grid(row=0, column=0, sticky=N+S)
@@ -155,6 +155,7 @@ class DBCGui(Frame):
 
     def onFetch( self ):
         selections = self.fileList.curselection()
+        print len(selections)
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
