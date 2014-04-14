@@ -290,6 +290,7 @@ class CachePeer( BranchPeer ):
                     break;
                 filedata += data
             fd.close()
+            print "at here"
             peerconn.senddata( REPLY, filedata)
 
         except:

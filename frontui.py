@@ -62,6 +62,7 @@ class DBCGui(Frame):
         rebuildFrame = Frame(self)
         searchFrame = Frame(self)
         addfileFrame = Frame(self)
+        fetchpartFrame = Frame(self)
         pbFrame = Frame(self)
 
         fileFrame.grid(row=0, column=0, sticky=N+S)
@@ -69,6 +70,7 @@ class DBCGui(Frame):
         pbFrame.grid(row=2, column=1)
         addfileFrame.grid(row=3)
         searchFrame.grid(row=4)
+        fetchpartFrame.grid(row=5)
         rebuildFrame.grid(row=3, column=1)
 
         Label( fileFrame, text='Available Files' ).grid()
@@ -89,9 +91,12 @@ class DBCGui(Frame):
                        command=self.onFetch)
         self.fetchButton.grid()
 
-        self.fetchpartButton = Button( fileFrame, text='FetchPart',
+        self.fetchpartEntry = Entry(fetchpartFrame, width=25)
+        self.fetchpartButton = Button( fetchpartFrame, text='FetchPart',
                        command=self.onFetchPart)
-        self.fetchpartButton.grid()
+        self.fetchpartEntry.grid(row=0, column=0)
+        self.fetchpartButton.grid(row=0, column=1)
+        
 
         self.deleteButton = Button( fileFrame, text='Delete',
                        command=self.onDelete)
@@ -169,7 +174,6 @@ class DBCGui(Frame):
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 for i in xrange(len(resp)):
                     if resp[i][0] == REPLY:
-                        print resp[i][2]
                         tmppath = os.getcwd() + '/tmp'
                         if not os.path.exists(tmppath):
                             os.mkdir(tmppath)
@@ -189,17 +193,19 @@ class DBCGui(Frame):
                 print "combine finished"
 
     def onFetchPart( self ):
-        print "here"
+        part = self.searchEntry.get()
+        self.searchEntry.delete(0, len(key))
+
         selections = self.fileList.curselection()
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port, filesize = selection
-                resp = self.cachepeer.connectandsend( host, port, FPART, "%s %d" % (filename, 2) )
-                if len(resp) and resp[0][1]==REPLY:
-                    partfilename = os.getcwd() + '/' + filename + ".part." + "2"
+                resp = self.cachepeer.connectandsend( host, port, FPART, "%s %d" % (filename, int(part)) )
+                if len(resp) and resp[0][0]==REPLY:
+                    partfilename = os.getcwd() + '/' + filename + ".part." + part
                     fd = file(partfilename, 'w')
-                    fd.write(resp[i][1])
+                    fd.write(resp[0][1])
                     fd.close()
 
     def onRemove( self ):
