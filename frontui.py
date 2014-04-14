@@ -161,13 +161,13 @@ class DBCGui(Frame):
             if len(selection) > 2:
                 filename, host, port, filesize = selection
                 chunksize = 4000
-		        filenum = int(filesize)/(chunksize*1024) + 1
+                filenum = int(filesize)/(chunksize*1024) + 1
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 for i in xrange(len(resp)):
                     if resp[i][0] == REPLY:
                         tmppath = os.getcwd() + '/tmp'
-                            if not os.path.exists(tmppath):
-                                os.mkdir(tmppath)
+                        if not os.path.exists(tmppath):
+                            os.mkdir(tmppath)
                         partfilename = tmppath+ '/' + filename + ".part." + str(i)
                         fd = file(partfilename, 'w')
                         fd.write(resp[i][1])
