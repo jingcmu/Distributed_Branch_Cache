@@ -164,7 +164,6 @@ class DBCGui(Frame):
 		for index in xrange(len(resp)):
                     
 
-
                 #    fd = file(filename, 'w')
                 #    fd.write(resp[0][1])
                 #    fd.close()
