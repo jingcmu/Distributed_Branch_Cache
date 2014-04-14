@@ -160,42 +160,32 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port, filesize = selection
+                filenum = int(filesize)/(chunksize*1024) + 1
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
-                if len(resp) and resp[0][0] == REPLY:
-                    chunksize = 4000
-                    filenum = filesize/(chunksize*1024) + 1
-                    path = os.getcwd() + '/'
-                    pathfilename = path + filename
+                for i in xrange(len(resp)):
+                    if resp[i][0] == REPLY:
+                        chunksize = 4000
+                        path = os.getcwd() + '/'
+                        pathfilename = path + filename
 
-                    tmppath = path + '/tmp'
-                    tmppathfilename = tmppath + '/' + filename
-                    with open(pathfilename, "ab+") as fw:
-                        for i in xrange(filenum):
-                            filename = tmppathfilename + ".part." + str(i)
-                            if os.path.exists(filename):
-                                with open(filename, "rb") as f:
-                                    chunk = f.read(chunksize*1024)
-                                    if(chunk):
-                                        print "absorbing ", filename
-                                        fw.write(chunk)
-                                        f.close()
-                            else:
-                                print "missing part " + str(i)
-                                break
-                    #destroy the temporary files
-                    for i in xrange(filenum):
-                            filename = tmppathfilename + ".part." + str(i)
-                            if os.path.exists(filename):
-                                os.remove(filename)
-                                print "destroyed ", filename
-                            else:
-                                print "missing part " + str(i)
-                    print "combine finished"
+                        tmppath = path + '/tmp'
+                        tmppathfilename = tmppath + '/' + filename
+                        partfilename = tmppathfilename + ".part." + str(i)
+                        fd = file(partfilename, 'w')
+                        fd.write(resp[i][1])
+                        fd.close()
+                
+                #destroy the temporary files
+                for i in xrange(filenum):
+                    partfilename = tmppathfilename + ".part." + str(i)
+                    if os.path.exists(partfilename):
+                        # os.remove(partfilename)
+                        print "existing ", partfilename
+                    else:
+                        print "missing part " + str(i)
+                print "combine finished"
 
-                    fd = file(filename, 'w')
-                    fd.write(resp[0][1])
-                    fd.close()
-                    self.cachepeer.cachefile[filename] = None 
+                        
 
     def onRemove( self ):
         selections = self.peerList.curselection()
