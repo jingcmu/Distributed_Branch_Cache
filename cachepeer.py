@@ -160,7 +160,6 @@ class CachePeer( BranchPeer ):
                 # end of spliting ...
                 for i in range(0, index):
                     partfilename = "%s/%s.part.%d" % (tmppath, filename, i)
-                    self.__debug(partfilename)
                     fd = file(partfilename, 'r')
                     filedata = ''
                     while True:
@@ -171,6 +170,7 @@ class CachePeer( BranchPeer ):
                     fd.close()
                     peerconn.senddata( REPLY, filedata)
         except:
+            print "coming.. here"
             peerconn.senddata( ERROR, 'Error reading file')
             return
 

@@ -160,15 +160,25 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port, filesize = selection
+                chunksize = 4000
+		filenum = int(filesize)/(chunksize*1024) + 1
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
-		for index in xrange(len(resp)):
-                    
-
-
-                #    fd = file(filename, 'w')
-                #    fd.write(resp[0][1])
-                #    fd.close()
-                #    self.cachepeer.cachefile[filename] = None 
+                for i in xrange(len(resp)):
+                    if resp[i][0] == REPLY:
+                        partfilename = filename + ".part." + str(i)
+                        fd = file(partfilename, 'w')
+                        fd.write(resp[i][1])
+                        fd.close()
+                
+                #destroy the temporary files
+                for i in xrange(filenum):
+                    partfilename = filename + ".part." + str(i)
+                    if os.path.exists(partfilename):
+                        # os.remove(partfilename)
+                        print "existing ", partfilename
+                    else:
+                        print "missing part " + str(i)
+                print "combine finished"
 
     def onRemove( self ):
         selections = self.peerList.curselection()
