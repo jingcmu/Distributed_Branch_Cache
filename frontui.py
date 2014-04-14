@@ -193,8 +193,8 @@ class DBCGui(Frame):
                 print "combine finished"
 
     def onFetchPart( self ):
-        part = self.searchEntry.get()
-        self.searchEntry.delete(0, len(key))
+        part = self.fetchpartEntry.get()
+        self.fetchpartEntry.delete(0, len(part))
 
         selections = self.fileList.curselection()
         if len(selections) == 1:
