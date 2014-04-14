@@ -304,7 +304,7 @@ class BranchPeerConnection:
         msglen = len(msgdata)
         msg = struct.pack( "!4sL%ds" % msglen, msgtype, msglen, msgdata )
         return msg
-        
+
     def __debug( self, msg ):
         if self.debug:
             debughelper(msg)

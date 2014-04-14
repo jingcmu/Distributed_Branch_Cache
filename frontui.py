@@ -139,7 +139,7 @@ class DBCGui(Frame):
     def onFetch( self ):
         selections = self.fileList.curselection()
         if len(selections) == 1:
-            selection = self.fileList.get(selections[0].split(':'))
+            selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port = selection
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)

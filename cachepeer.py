@@ -4,14 +4,14 @@ from branchpeer import *
 # support query type list as follow
 LIST = "LIST"       # list all available peer nodes
 JOIN = "JOIN"       # join the p2p network
-QUERY = "QUERY"     # query file message
+QUERY = "QUER"     # query file message
 RESP  = "RESP"      # response message
-FILEGET = "FILEGET" # fetch a file 
+FILEGET = "FGET" # fetch a file 
 QUIT    = "QUIT"    # quit the p2p network
 NAME    = "NAME"    # query a peer's id
 
-ERROR  = "ERROR"    
-REPLY  = "REPLY"
+ERROR  = "ERRO"    
+REPLY  = "REPL"
 
 class CachePeer( BranchPeer ):
 
@@ -77,7 +77,7 @@ class CachePeer( BranchPeer ):
     def __query_handler(self, peerconn, data):
         """handle query message, QUERY, data format : "peer-id  keyword  ttl" """
         try:
-            pid, key, ttl = data.split()
+            peerid, key, ttl = data.split()
             peerconn.senddata( REPLY, 'Query Ack: %s' % key)
         except:
             peerconn.senddata( ERROR, 'Query : invalid arguments')
