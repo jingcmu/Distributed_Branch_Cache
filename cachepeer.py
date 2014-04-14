@@ -95,7 +95,11 @@ class CachePeer( BranchPeer ):
             if key in filename:
                 filepeerid = self.cachefile[ filename ]
                 if not filepeerid:
+                    self.__debug("haha")
                     filepeerid = self.myid
+                else:
+                    self.__debug("hihi")
+
                 host, port = peerid.split(':')
                 self.connectandsend(host, int(port), RESP, 
                     '%s %s' % (filename, filepeerid),
