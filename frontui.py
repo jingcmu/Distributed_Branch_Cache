@@ -161,18 +161,21 @@ class DBCGui(Frame):
             if len(selection) > 2:
                 filename, host, port, filesize = selection
                 chunksize = 4000
-		filenum = int(filesize)/(chunksize*1024) + 1
+		        filenum = int(filesize)/(chunksize*1024) + 1
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 for i in xrange(len(resp)):
                     if resp[i][0] == REPLY:
-                        partfilename = filename + ".part." + str(i)
+                        tmppath = os.getcwd() + '/tmp'
+                            if not os.path.exists(tmppath):
+                                os.mkdir(tmppath)
+                        partfilename = tmppath+ '/' + filename + ".part." + str(i)
                         fd = file(partfilename, 'w')
                         fd.write(resp[i][1])
                         fd.close()
                 
                 #destroy the temporary files
                 for i in xrange(filenum):
-                    partfilename = filename + ".part." + str(i)
+                    partfilename = os.getcwd() + '/tmp/' + filename + ".part." + str(i)
                     if os.path.exists(partfilename):
                         # os.remove(partfilename)
                         print "existing ", partfilename
