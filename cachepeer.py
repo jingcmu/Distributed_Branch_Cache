@@ -2,16 +2,17 @@
 
 from branchpeer import *
 # support query type list as follow
-LIST = "LIST"       # list all available peer nodes
-JOIN = "JOIN"       # join the p2p network
-QUERY = "QUER"     # query file message
-RESP  = "RESP"      # response message
-FILEGET = "FGET" # fetch a file 
+LIST    = "LIST"       # list all available peer nodes
+JOIN    = "JOIN"       # join the p2p network
+QUERY   = "QUER"      # query file message
+RESP    = "RESP"      # response message
+FILEGET = "FILE"    # fetch a file 
 QUIT    = "QUIT"    # quit the p2p network
 NAME    = "NAME"    # query a peer's id
+DELETE  = "DELE"    # delete local file
 
-ERROR  = "ERRO"    
-REPLY  = "REPL"
+ERROR   = "ERRO"    
+REPLY   = "REPL"
 
 class CachePeer( BranchPeer ):
 
@@ -27,6 +28,7 @@ class CachePeer( BranchPeer ):
             FILEGET: self.__fileget_handler,
             QUIT:   self.__quit_handler,
             NAME:   self.__name_handler,
+            DELETE: self.__delete_handler
         }
         for msgtype in handlers:
             self.addhandler(msgtype, handlers[msgtype])
@@ -92,13 +94,18 @@ class CachePeer( BranchPeer ):
         for filename in self.cachefile.keys():
             if key in filename:
                 filepeerid = self.cachefile[ filename ]
+                host, port = peerid.split(':')
                 if not filepeerid:
                     filepeerid = self.myid
-                host, port = peerid.split(':')
-                self.connectandsend(host, int(port), RESP, 
+                    self.connectandsend(host, int(port), RESP, 
                     '%s %s' % (filename, filepeerid),
                     pid = peerid)
-                return
+                    return
+                for fpid in filepeerid:
+                    self.connectandsend(host, int(port), RESP, 
+                    '%s %s' % (filename, fpid),
+                    pid = peerid)
+                    return
         # if key is not found in the local cache file
         if ttl > 0:
             msgdata = "%s %s %d" % (peerid, key, ttl-1)
@@ -111,12 +118,19 @@ class CachePeer( BranchPeer ):
         """handle response message, RESP, data format should be "file-name, peer-id" """   
         try:
             filename, filepeerid = data.split()
-            if filename in self.cachefile:
+            if ( filename in self.cachefile and not self.cachefile[filename]):
                 pass
             else:
-                self.cachefile[filename] = filepeerid
+                if filename not in self.cachefile.keys():
+                    self.cachefile[filename] = []
+                    self.cachefile[filename].append(filepeerid)
+                elif filepeerid not in self.cachefile[filename]:
+                    self.cachefile[filename].append(filepeerid)
+            self.__debug(self.cachefile)
         except:
             traceback.print_exc()
+
+
     def __fileget_handler(self, peerconn, data):
         """handle file get message, FILEGET data format should  a string "file-name" """
         filename = data
@@ -136,7 +150,21 @@ class CachePeer( BranchPeer ):
             peerconn.senddata( ERROR, 'Error reading file')
             return
 
-        peerconn.senddata(REPLY, filedata)
+        peerconn.senddata( REPLY, filedata)
+
+
+    def __delete_handler(self, peerconn, data):
+        """handle delete file request, data format should be "filename, peer-id" """
+        try:
+            filename, filepeerid = data.split()
+            if filename in self.cachefile and filepeerid in self.cachefile[filename]:
+                self.cachefile[filename].remove(filepeerid)
+                peerconn.senddata(REPLY, "del file: %s %s" % (filename, filepeerid))
+            else:
+                pass
+        except:
+            traceback.print_exc()
+
     def __quit_handler(self, peerconn, data):
         """handle peer quit message, data is not needed """
         self.peerlock.acquire()
@@ -163,9 +191,10 @@ class CachePeer( BranchPeer ):
         """add file into local cache based on LRU policy"""
         self.cachefile[filename] = None
 
-    def removefile(sefl, filename):
+    def removefile(self, filename):
         """remove file from the local cache based on LRU policy """
-
+        del self.cachefile[filename]
+        os.remove(filename)
 
     def buildpeers(self, host, port, hops=1):
         if self.maxpeersreached() or not hops:

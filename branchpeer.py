@@ -3,6 +3,7 @@ import struct
 import threading
 import time
 import traceback
+import os
 
 
 def debughelper( msg ):
@@ -13,7 +14,7 @@ def debughelper( msg ):
 #==============================================================================
 class BranchPeer:
 
-    def __init__( self, maxpeers, serverport, myid=None, serverhost="128.237.232.214"):
+    def __init__( self, maxpeers, serverport, myid=None, serverhost="10.10.0.111"):
         """ Initializes a peer servent (sic.) with the ability to catalog
         information for up to maxpeers number of peers (maxpeers may
         be set to 0 to allow unlimited number of peers), listening on
@@ -22,7 +23,7 @@ class BranchPeer:
         (serverhost) will be determined by attempting to connect to an
         Internet host like Google.
         """
-        self.debug = 1
+        self.debug = 0
 
         self.maxpeers = int(maxpeers)
         self.serverport = int(serverport)
@@ -213,7 +214,6 @@ class BranchPeer:
         try:
             peerconn = BranchPeerConnection( pid, host, port, debug=self.debug )
             peerconn.senddata( msgtype, msgdata )
-
             if waitreply:
                 onereply = peerconn.recvdata()
             while (onereply != (None,None)):
@@ -258,7 +258,7 @@ class BranchPeer:
 
     def mainloop( self ):
         s = self.makeserversocket( self.serverport )
-        s.settimeout(2)
+        s.settimeout(5)
 
         while not self.shutdown:
             try:

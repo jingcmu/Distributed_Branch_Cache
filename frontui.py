@@ -48,7 +48,10 @@ class DBCGui(Frame):
             pid = self.cachepeer.cachefile[filename]
             if not pid:
                 pid = '(local)'
-            self.fileList.insert( END, "%s:%s" % (filename, pid))
+                self.fileList.insert( END, "%s:%s" % (filename, pid))
+            else:
+                for p in pid:
+                    self.fileList.insert( END, "%s:%s" % (filename, p))
     
     def creatWidgets( self ):
 
@@ -75,7 +78,7 @@ class DBCGui(Frame):
         fileScroll = Scrollbar( fileListFrame, orient=VERTICAL )
         fileScroll.grid(row=0, column=1, sticky=N+S)
 
-        self.fileList = Listbox(fileListFrame, height=5, 
+        self.fileList = Listbox(fileListFrame, selectmode='multiple', height=5, 
                     yscrollcommand=fileScroll.set)
         #self.fileList.insert( END, 'a', 'b', 'c', 'd', 'e', 'f', 'g' )
         self.fileList.grid(row=0, column=0, sticky=N+S)
@@ -84,6 +87,10 @@ class DBCGui(Frame):
         self.fetchButton = Button( fileFrame, text='Fetch',
                        command=self.onFetch)
         self.fetchButton.grid()
+
+        self.deleteButton = Button( fileFrame, text='Delete',
+                       command=self.onDelete)
+        self.deleteButton.grid()
 
         self.addfileEntry = Entry(addfileFrame, width=25)
         self.addfileButton = Button(addfileFrame, text='Add',
@@ -102,7 +109,7 @@ class DBCGui(Frame):
         peerScroll = Scrollbar( peerListFrame, orient=VERTICAL )
         peerScroll.grid(row=0, column=1, sticky=N+S)
 
-        self.peerList = Listbox(peerListFrame, height=5,
+        self.peerList = Listbox(peerListFrame, selectmode='multiple', height=5,
                     yscrollcommand=peerScroll.set)
         #self.peerList.insert( END, '1', '2', '3', '4', '5', '6' )
         self.peerList.grid(row=0, column=0, sticky=N+S)
@@ -128,6 +135,16 @@ class DBCGui(Frame):
             self.cachepeer.addfile(filename)
         self.addfileEntry.delete(0, len(file))
         self.updateFileList()
+
+    def onDelete( self ):
+        selections = self.fileList.curselection()
+        if len(selections) == 1:
+            selection = self.fileList.get(selections[0]).split(':')
+            if len(selection) == 2:
+                filename = selection[0]
+                self.cachepeer.removefile(filename)
+                for pid in self.cachepeer.getpeerids(): 
+                    self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (filename, self.cachepeer.myid) )
 
     def onSearch( self ):
         key = self.searchEntry.get()
