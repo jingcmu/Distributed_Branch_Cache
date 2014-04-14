@@ -45,13 +45,14 @@ class DBCGui(Frame):
         if self.fileList.size() > 0:
             self.fileList.delete(0, self.fileList.size()-1)
         for filename in self.cachepeer.cachefile:
-            pid = self.cachepeer.cachefile[filename]
+            pid = self.cachepeer.cachefile[filename][0]
+            filesize = self.cachepeer.cachefile[filename][1]
             if not pid:
                 pid = '(local)'
-                self.fileList.insert( END, "%s:%s" % (filename, pid))
+                self.fileList.insert( END, "%s:%s:%s" % (filename, pid, filesize))
             else:
                 for p in pid:
-                    self.fileList.insert( END, "%s:%s" % (filename, p))
+                    self.fileList.insert( END, "%s:%s:%s" % (filename, p, filesize))
     
     def creatWidgets( self ):
 
@@ -142,7 +143,7 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) == 2:
                 filename = selection[0]
-                del self.cachepeer.cachefile[filename]
+                self.cachepeer.removefile(filename)
                 for pid in self.cachepeer.getpeerids(): 
                     self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (filename, self.cachepeer.myid) )
 
@@ -155,14 +156,42 @@ class DBCGui(Frame):
 
     def onFetch( self ):
         selections = self.fileList.curselection()
-        print len(selections)
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
-                filename, host, port = selection
-                print selection
+                filename, host, port, filesize = selection
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 if len(resp) and resp[0][0] == REPLY:
+                    chunksize = 4000
+                    filenum = filesize/(chunksize*1024) + 1
+                    path = os.getcwd() + '/'
+                    pathfilename = path + filename
+
+                    tmppath = path + '/tmp'
+                    tmppathfilename = tmppath + '/' + filename
+                    with open(pathfilename, "ab+") as fw:
+                        for i in xrange(filenum):
+                            filename = tmppathfilename + ".part." + str(i)
+                            if os.path.exists(filename):
+                                with open(filename, "rb") as f:
+                                    chunk = f.read(chunksize*1024)
+                                    if(chunk):
+                                        print "absorbing ", filename
+                                        fw.write(chunk)
+                                        f.close()
+                            else:
+                                print "missing part " + str(i)
+                                break
+                    #destroy the temporary files
+                    for i in xrange(filenum):
+                            filename = tmppathfilename + ".part." + str(i)
+                            if os.path.exists(filename):
+                                os.remove(filename)
+                                print "destroyed ", filename
+                            else:
+                                print "missing part " + str(i)
+                    print "combine finished"
+
                     fd = file(filename, 'w')
                     fd.write(resp[0][1])
                     fd.close()

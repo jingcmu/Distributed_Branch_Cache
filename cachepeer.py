@@ -93,18 +93,20 @@ class CachePeer( BranchPeer ):
         or propagating msg to its all peers """
         for filename in self.cachefile.keys():
             if key in filename:
-                filepeerid = self.cachefile[ filename ]
-                if not filepeerid:
-                    self.__debug("haha")
-                    filepeerid = self.myid
-                else:
-                    self.__debug("hihi")
-
+                filepeerid = self.cachefile[ filename ][0]
+                filesize = self.cachefile[ filename ][1]
                 host, port = peerid.split(':')
-                self.connectandsend(host, int(port), RESP, 
-                    '%s %s' % (filename, filepeerid),
+                if not filepeerid:
+                    filepeerid = self.myid
+                    self.connectandsend(host, int(port), RESP, 
+                    '%s %s %s' % ( filename, filepeerid, filesize ),
                     pid = peerid)
-                return
+                    return
+                for fpid in filepeerid:
+                    self.connectandsend(host, int(port), RESP, 
+                    '%s %s %s' % ( filename, fpid, filesize ),
+                    pid = peerid)
+                    return
         # if key is not found in the local cache file
         if ttl > 0:
             msgdata = "%s %s %d" % (peerid, key, ttl-1)
@@ -114,18 +116,18 @@ class CachePeer( BranchPeer ):
 
 
     def __resp_handler(self, peerconn, data):
-        """handle response message, RESP, data format should be "file-name, peer-id" """   
+        """handle response message, RESP, data format should be "file-name, peer-id, file-size" """   
         try:
-            filename, filepeerid = data.split()
-            if ( filename in self.cachefile and not self.cachefile[filename]):
+            filename, filepeerid, filesize = data.split()
+            if ( filename in self.cachefile and not self.cachefile[filename][0]):
                 pass
             else:
-                if filename not in  self.cachefile:
-                    self.cachefile[filename] = []
-                    self.cachefile[filename].append(filepeerid)
-                else:
-                    self.cachefile[filename].append(filepeerid)
-
+                if filename not in self.cachefile.keys():
+                    self.cachefile[filename] = ([], filesize)
+                    self.cachefile[filename][0].append(filepeerid)
+                elif filepeerid not in self.cachefile[filename]:
+                    self.cachefile[filename][0].append(filepeerid)
+            self.__debug(self.cachefile)
         except:
             traceback.print_exc()
 
@@ -136,19 +138,43 @@ class CachePeer( BranchPeer ):
             peerconn.senddata( ERROR, 'File not found')
             return
         try:
-            fd = file(filename, 'r')
-            filedata = ''
-            while True:
-                data = fd.read(1024)
-                if not len(data):
-                    break;
-                filedata += data
-            fd.close()
+            pathfilename = os.getcwd()+'/'+filename
+            statinfo = os.stat(pathfilename)
+            path, filename = os.path.split(pathfilename)
+            tmppath = path + '/tmp'
+            if not os.path.exists(tmppath):
+                os.mkdir(tmppath)
+            print "file size: %d(kb)" % (statinfo.st_size/(1024))
+            with open(pathfilename, "rb") as f:
+                index = 0
+                while True:
+                    chunk = f.read(4000 * 1024)
+                    if(chunk):
+                        fn = "%s/%s.part.%d" % (tmppath, filename, index)
+                        index = index + 1
+                        print "creating", fn
+                        with open(fn, "wb") as fw:
+                            fw.write(chunk)
+                    else:
+                        break
+                # end of spliting ...
+                for i in range(0, index):
+                    partfilename = "%s/%s.part.%d" % (tmppath, filename, i)
+                    self.__debug(partfilename)
+                    fd = file(partfilename, 'r')
+                    filedata = ''
+                    while True:
+                        data = fd.read(1024)
+                        if not len(data):
+                            break;
+                        filedata += data
+                    fd.close()
+                    peerconn.senddata( REPLY, filedata)
         except:
             peerconn.senddata( ERROR, 'Error reading file')
             return
 
-        peerconn.senddata( REPLY, filedata)
+        # peerconn.senddata( REPLY, filedata)
 
 
     def __delete_handler(self, peerconn, data):
@@ -187,11 +213,14 @@ class CachePeer( BranchPeer ):
 
     def addfile( self, filename ):
         """add file into local cache based on LRU policy"""
-        self.cachefile[filename] = None
+        pathfilename = os.getcwd()+'/'+filename
+        statinfo = os.stat(pathfilename)
+        self.cachefile[filename] = (None, statinfo.st_size)
 
-    def removefile(sefl, filename):
+    def removefile(self, filename):
         """remove file from the local cache based on LRU policy """
-
+        del self.cachefile[filename]
+        os.remove(filename)
 
     def buildpeers(self, host, port, hops=1):
         if self.maxpeersreached() or not hops:

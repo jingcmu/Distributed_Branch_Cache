@@ -3,6 +3,7 @@ import struct
 import threading
 import time
 import traceback
+import os
 
 
 def debughelper( msg ):
@@ -13,7 +14,7 @@ def debughelper( msg ):
 #==============================================================================
 class BranchPeer:
 
-    def __init__( self, maxpeers, serverport, myid=None, serverhost="10.10.0.110"):
+    def __init__( self, maxpeers, serverport, myid=None, serverhost="128.237.163.22"):
         """ Initializes a peer servent (sic.) with the ability to catalog
         information for up to maxpeers number of peers (maxpeers may
         be set to 0 to allow unlimited number of peers), listening on
@@ -321,9 +322,9 @@ class BranchPeerConnection:
         except KeyboardInterrupt:
             raise
         except:
-            if self.debug:
-                traceback.print_exc()
-                return False
+            # if self.debug:
+            traceback.print_exc()
+            return False
 
         return True
 

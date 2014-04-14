@@ -19,7 +19,7 @@ class FileManager:
 		#the small files will be put into \tmp under local path
 		statinfo = os.stat(pathfilename)
 		path, filename = os.path.split(pathfilename)
-		tmppath = path + '\\tmp'
+		tmppath = path + '/tmp'
 		if not os.path.exists(tmppath):
 			os.mkdir(tmppath)
 		print "file size: %d(kb)" % (statinfo.st_size/(1024))
@@ -28,7 +28,7 @@ class FileManager:
 			while True:
 				chunk = f.read(chunksize * 1024)
 				if(chunk):
-					fn = "%s\%s.part.%d" % (tmppath, filename, index)
+					fn = "%s %s.part.%d" % (tmppath, filename, index)
 					index = index + 1
 					print "creating", fn
 					with open(fn, "wb") as fw:
@@ -45,8 +45,8 @@ class FileManager:
 		# the tmp files will be destroied
 		filenum = filesize/(chunksize*1024) + 1
 		path, filename = os.path.split(pathfilename)
-		tmppath = path + '\\tmp'
-		tmppathfilename = tmppath + '\\' + filename
+		tmppath = path + '/tmp'
+		tmppathfilename = tmppath + '/' + filename
 		with open(pathfilename, "ab+") as fw:
 			for i in xrange(filenum):
 				filename = tmppathfilename + ".part." + str(i)
