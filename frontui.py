@@ -89,6 +89,10 @@ class DBCGui(Frame):
                        command=self.onFetch)
         self.fetchButton.grid()
 
+        self.fetchpartButton = Button( fileFrame, text='FetchPart',
+                       command=self.onFetchPart)
+        self.fetchpartButton.grid()
+
         self.deleteButton = Button( fileFrame, text='Delete',
                        command=self.onDelete)
         self.deleteButton.grid()
@@ -183,6 +187,19 @@ class DBCGui(Frame):
                     else:
                         print "missing part " + str(i)
                 print "combine finished"
+
+    def onFetchPart( self ):
+        selections = self.fileList.curselection()
+        if len(selections) == 1:
+            selection = self.fileList.get(selections[0]).split(':')
+            if len(selection) > 2:
+                filename, host, port, filesize = selection
+                resp = self.cachepeer.connectandsend( host, port, FPART, filename, 2)
+                if len(resp) and resp[0][1]==REPLY:
+                    partfilename = os.getcwd() + '/' + filename + ".part." + "2"
+                    fd = file(partfilename, 'w')
+                    fd.write(resp[i][1])
+                    fd.close()
 
     def onRemove( self ):
         selections = self.peerList.curselection()

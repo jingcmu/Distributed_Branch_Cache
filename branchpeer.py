@@ -310,7 +310,7 @@ class BranchPeerConnection:
             debughelper(msg)
 
 
-    def senddata( self, msgtype, msgdata, filepart=None):
+    def senddata( self, msgtype, msgdata):
         """
         Send a message through a peer connection. Returns True on success
         or False if there was an error.

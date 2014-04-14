@@ -2,14 +2,15 @@
 
 from branchpeer import *
 # support query type list as follow
-LIST    = "LIST"       # list all available peer nodes
-JOIN    = "JOIN"       # join the p2p network
+LIST    = "LIST"      # list all available peer nodes
+JOIN    = "JOIN"      # join the p2p network
 QUERY   = "QUER"      # query file message
 RESP    = "RESP"      # response message
-FILEGET = "FILE"    # fetch a file 
-QUIT    = "QUIT"    # quit the p2p network
-NAME    = "NAME"    # query a peer's id
-DELETE  = "DELE"    # delete local file
+FILEGET = "FILE"      # fetch a file 
+QUIT    = "QUIT"      # quit the p2p network
+NAME    = "NAME"      # query a peer's id
+DELETE  = "DELE"      # delete local file
+FPART = "FPAR"
 
 ERROR   = "ERRO"    
 REPLY   = "REPL"
@@ -28,7 +29,8 @@ class CachePeer( BranchPeer ):
             FILEGET: self.__fileget_handler,
             QUIT:   self.__quit_handler,
             NAME:   self.__name_handler,
-            DELETE: self.__delete_handler
+            DELETE: self.__delete_handler,
+            FPART:  self.__filechunkget_handler
         }
         for msgtype in handlers:
             self.addhandler(msgtype, handlers[msgtype])
@@ -168,7 +170,7 @@ class CachePeer( BranchPeer ):
                             break;
                         filedata += data
                     fd.close()
-                    peerconn.senddata( REPLY, filedata, partfilename)
+                    peerconn.senddata( REPLY, filedata)
         except:
             peerconn.senddata( ERROR, 'Error reading file')
             return
@@ -257,25 +259,33 @@ class CachePeer( BranchPeer ):
     
     # get just some chunks of file indicated by chunkRange, not the whole file
     # 4/12 updated
-    def __filechunkget_handler(self, peerconn, data, chunkRange):
-        """handle file get message by a range of chunk """
-        pathfilename = data
-        chunkStart, chunkEnd = chunkRange
-        statinfo = os.stat(pathfilename)
-        path, filename = os.path.split(pathfilename)
-        tmppath = path + '\\tmp'
+    def __filechunkget_handler(self, peerconn, data):
+        """handle file get message by a range of chunk, data format "file-name part-number" """
+        filename, part = data.split()
+        tmppath= os.getcwd()+'/tmp' 
+        if not os.path.exists(tmppath):
+            peerconn.senddata( ERROR, 'No Split File exists!')
+            return
         
         if filename not in self.cachefile:
             peerconn.senddata( ERROR, 'File not found')
             return
         try:
-        	  while chunkStart <= chunkEnd:
-        	      fn = "%s\%s.part.%d" % (tmppath, filename, chunkStart)
-        	      chunkStart += 1
-        	      fd = open(fn, 'rb')
-        	      filedata = fd.read()
-        	      peerconn.senddata(REPLY, filedata)
-        	      fd.close()
+            partfilename = "%s/%s.part.%d" % ( tmppath, filename, int(part) )
+            if not os.path.exists(partfilename):
+                peerconn.senddata( ERROR, 'No Require File part!')
+                return
+
+            fd = file(partfilename, 'r')
+            filedata = ''
+            while True:
+                data = fd.read(1024)
+                if not len(data):
+                    break;
+                filedata += data
+            fd.close()
+            peerconn.senddata( REPLY, filedata)
+
         except:
             peerconn.senddata( ERROR, 'Error reading file')
             return
