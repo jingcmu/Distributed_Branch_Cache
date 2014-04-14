@@ -165,6 +165,7 @@ class DBCGui(Frame):
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 for i in xrange(len(resp)):
                     if resp[i][0] == REPLY:
+                        print resp[i][2]
                         tmppath = os.getcwd() + '/tmp'
                         if not os.path.exists(tmppath):
                             os.mkdir(tmppath)

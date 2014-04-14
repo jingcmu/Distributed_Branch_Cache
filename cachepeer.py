@@ -168,9 +168,8 @@ class CachePeer( BranchPeer ):
                             break;
                         filedata += data
                     fd.close()
-                    peerconn.senddata( REPLY, filedata)
+                    peerconn.senddata( REPLY, filedata, partfilename)
         except:
-            print "coming.. here"
             peerconn.senddata( ERROR, 'Error reading file')
             return
 
