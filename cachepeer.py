@@ -261,18 +261,24 @@ class CachePeer( BranchPeer ):
     # 4/12 updated
     def __filechunkget_handler(self, peerconn, data):
         """handle file get message by a range of chunk, data format "file-name part-number" """
+        print '0'
+        print data
         filename, part = data.split()
+        print '1'
         tmppath= os.getcwd()+'/tmp' 
         if not os.path.exists(tmppath):
+            print '2'
             peerconn.senddata( ERROR, 'No Split File exists!')
             return
         
         if filename not in self.cachefile:
+            print '3'
             peerconn.senddata( ERROR, 'File not found')
             return
         try:
             partfilename = "%s/%s.part.%d" % ( tmppath, filename, int(part) )
             if not os.path.exists(partfilename):
+                print '4'
                 peerconn.senddata( ERROR, 'No Require File part!')
                 return
 
@@ -287,5 +293,6 @@ class CachePeer( BranchPeer ):
             peerconn.senddata( REPLY, filedata)
 
         except:
+            print 'should nerver goes here...'
             peerconn.senddata( ERROR, 'Error reading file')
             return

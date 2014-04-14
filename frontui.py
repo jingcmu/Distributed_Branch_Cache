@@ -189,12 +189,13 @@ class DBCGui(Frame):
                 print "combine finished"
 
     def onFetchPart( self ):
+        print "here"
         selections = self.fileList.curselection()
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port, filesize = selection
-                resp = self.cachepeer.connectandsend( host, port, FPART, filename, 2)
+                resp = self.cachepeer.connectandsend( host, port, FPART, "%s %d" % (filename, 2) )
                 if len(resp) and resp[0][1]==REPLY:
                     partfilename = os.getcwd() + '/' + filename + ".part." + "2"
                     fd = file(partfilename, 'w')
