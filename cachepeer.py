@@ -127,7 +127,7 @@ class CachePeer( BranchPeer ):
                 if filename not in self.cachefile.keys():
                     self.cachefile[filename] = ([], filesize)
                     self.cachefile[filename][0].append(filepeerid)
-                elif filepeerid not in self.cachefile[filename]:
+                elif filepeerid not in self.cachefile[filename][0]:
                     self.cachefile[filename][0].append(filepeerid)
             self.__debug(self.cachefile)
         except:
