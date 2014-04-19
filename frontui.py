@@ -21,6 +21,7 @@ class DBCGui(Frame):
         self.cachepeer.buildpeers( host, int(port), hops=hops )
         self.updatePeerList()
 
+        # start cachepeer thread
         t = threading.Thread( target=self.cachepeer.mainloop, args=[])
         t.start()
 
@@ -36,6 +37,7 @@ class DBCGui(Frame):
         self.cachepeer.shutdown = True
 
     def updatePeerList( self ):
+        """ first remove all peers in the list, then insert peers one by one """
         if self.peerList.size() > 0:
             self.peerList.delete(0, self.peerList.size()-1)
         for pid in self.cachepeer.getpeerids():
@@ -140,6 +142,7 @@ class DBCGui(Frame):
         self.rebuildButton.grid(row=0, column=1) 
 
     def onAdd( self ):
+        # add one file to FileList
         file  = self.addfileEntry.get()
         if file.lstrip().rstrip():
             filename = file.lstrip().rstrip()
@@ -148,6 +151,7 @@ class DBCGui(Frame):
         self.updateFileList()
 
     def onDelete( self ):
+        # delete one file from filelist
         selections = self.fileList.curselection()
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
@@ -158,6 +162,7 @@ class DBCGui(Frame):
                     self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (filename, self.cachepeer.myid) )
 
     def onSearch( self ):
+        # search on peers
         key = self.searchEntry.get()
         self.searchEntry.delete(0, len(key))
 
