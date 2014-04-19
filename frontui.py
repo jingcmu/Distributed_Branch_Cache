@@ -39,6 +39,7 @@ class DBCGui(Frame):
         if self.peerList.size() > 0:
             self.peerList.delete(0, self.peerList.size()-1)
         for pid in self.cachepeer.getpeerids():
+            # print pid
             self.peerList.insert(END, pid)
     
     def updateFileList( self ):

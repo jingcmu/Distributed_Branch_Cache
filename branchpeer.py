@@ -14,7 +14,7 @@ def debughelper( msg ):
 #==============================================================================
 class BranchPeer:
 
-    def __init__( self, maxpeers, serverport, myid=None, serverhost="127.0.0.1"):
+    def __init__( self, maxpeers, serverport, myid=None, serverhost="128.237.208.189"):
         """ Initializes a peer servent (sic.) with the ability to catalog
         information for up to maxpeers number of peers (maxpeers may
         be set to 0 to allow unlimited number of peers), listening on
@@ -93,7 +93,7 @@ class BranchPeer:
 
     def __runstabilizer( self, stabilizer, delay ):
         """run a seperate thread during delay interval """
-        while True:
+        while not self.shutdown:
             stabilizer()
             time.sleep(delay)
 
@@ -234,13 +234,14 @@ class BranchPeer:
         they are still active. Removes any from the peer list that do
         not reply. This function can be used as a simple stabilizer.
         """
+        # print "check alive..."
         deletelist = []
         for pid in self.peers:
             isconn = False
             try:
                 host, port = self.peers[ pid ]
                 peerconn = BranchPeerConnection( pid, host, port, debug=self.debug)
-                peerconn.senddata('ping', '')
+                peerconn.senddata('PING', '')
                 isconn = True
             except:
                 deletelist.append( pid )
@@ -259,7 +260,7 @@ class BranchPeer:
 
     def mainloop( self ):
         s = self.makeserversocket( self.serverport )
-        s.settimeout(5)
+        s.settimeout(10)
 
         while not self.shutdown:
             try:
