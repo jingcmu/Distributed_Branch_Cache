@@ -14,7 +14,7 @@ def debughelper( msg ):
 #==============================================================================
 class BranchPeer:
 
-    def __init__( self, maxpeers, serverport, myid=None, serverhost="128.237.208.189"):
+    def __init__( self, maxpeers, serverport, myid=None, serverhost="127.0.0.1"):
         """ Initializes a peer servent (sic.) with the ability to catalog
         information for up to maxpeers number of peers (maxpeers may
         be set to 0 to allow unlimited number of peers), listening on
@@ -40,7 +40,7 @@ class BranchPeer:
             self.myid = myid
         else:
             self.myid = '%s:%d' % (self.serverhost, self.serverport)
-        
+
         self.peerlock = threading.Lock()
 
         # list (dictionary/hash table) of known peers
@@ -93,8 +93,9 @@ class BranchPeer:
 
     def __runstabilizer( self, stabilizer, delay ):
         """run a seperate thread during delay interval """
-        stabilizer()
-        time.sleep(delay)
+        while True:
+            stabilizer()
+            time.sleep(delay)
 
 
     def setmyid( self, myid ):
