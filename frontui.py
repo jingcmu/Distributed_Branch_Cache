@@ -15,7 +15,7 @@ class DBCGui(Frame):
         self.creatWidgets()
         self.master.title("Distribute Branch Cache GUI %d" % serverport)
         self.cachepeer = CachePeer( maxpeers, serverport )
-        self.bind("Destory", self.__onDestory)
+        self.bind("<Destroy>", self.__onDestroy)
 
         host, port = firstpeer.split(":")
         self.cachepeer.buildpeers( host, int(port), hops=hops )
@@ -32,8 +32,8 @@ class DBCGui(Frame):
         self.after(3000, self.onTimer)
 
 
-    def __onDestory( self, event ):
-        self.cachepeer.shutdonw = True
+    def __onDestroy( self, event ):
+        self.cachepeer.shutdown = True
 
     def updatePeerList( self ):
         if self.peerList.size() > 0:
