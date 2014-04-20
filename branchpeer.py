@@ -14,7 +14,7 @@ def debughelper( msg ):
 #==============================================================================
 class BranchPeer:
 
-    def __init__( self, maxpeers, serverport, myid=None, serverhost="10.10.0.101"):
+    def __init__( self, maxpeers, serverport, myid=None, serverhost="127.0.0.1"):
         """ Initializes a peer servent (sic.) with the ability to catalog
         information for up to maxpeers number of peers (maxpeers may
         be set to 0 to allow unlimited number of peers), listening on
