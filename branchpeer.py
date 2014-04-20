@@ -3,7 +3,7 @@ import struct
 import threading
 import time
 import traceback
-import os
+#import os
 
 
 def debughelper( msg ):
@@ -264,7 +264,7 @@ class BranchPeer:
 
         while not self.shutdown:
             try:
-                clientsock, clientaddr = s.accept()
+                clientsock, _ = s.accept()
                 clientsock.settimeout(None)
 
                 t = threading.Thread( target = self.__handlepeer, args = [ clientsock ] )
