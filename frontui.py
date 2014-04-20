@@ -2,7 +2,7 @@
 
 import sys
 import threading
-
+from filemanager import *
 from Tkinter import *
 from random import *
 from cachepeer import *
@@ -170,6 +170,7 @@ class DBCGui(Frame):
             self.cachepeer.sendtopeer(pid, QUERY, "%s %s 4" % (self.cachepeer.myid, key))
 
     def onFetch( self ):
+        # fetch file
         selections = self.fileList.curselection()
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
@@ -189,15 +190,11 @@ class DBCGui(Frame):
                         print len(resp[i][1])
                         fd.close()
 
-                #destroy the temporary files
-                for i in xrange(filenum):
-                    partfilename = os.getcwd() + '/tmp/' + filename + ".part." + str(i)
-                    if os.path.exists(partfilename):
-                        # os.remove(partfilename)
-                        print "existing ", partfilename
-                    else:
-                        print "missing part " + str(i)
-                print "combine finished"
+        # combine the temporary files
+        filemanager = FileManager(int(filesize), chunksize, os.getcwd() + '/' + filename)
+        filemanager.combineFile()
+
+
 
     def onFetchPart( self ):
         part = self.fetchpartEntry.get()
