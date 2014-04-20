@@ -43,7 +43,7 @@ class DBCGui(Frame):
         for pid in self.cachepeer.getpeerids():
             # print pid
             self.peerList.insert(END, pid)
-    
+
     def updateFileList( self ):
         if self.fileList.size() > 0:
             self.fileList.delete(0, self.fileList.size()-1)
@@ -56,7 +56,7 @@ class DBCGui(Frame):
             else:
                 for p in pid:
                     self.fileList.insert( END, "%s:%s:%s" % (filename, p, filesize))
-    
+
     def creatWidgets( self ):
 
         fileFrame = Frame(self)
@@ -84,7 +84,7 @@ class DBCGui(Frame):
         fileScroll = Scrollbar( fileListFrame, orient=VERTICAL )
         fileScroll.grid(row=0, column=1, sticky=N+S)
 
-        self.fileList = Listbox(fileListFrame, selectmode='multiple', height=5, 
+        self.fileList = Listbox(fileListFrame, selectmode='multiple', height=5,
                     yscrollcommand=fileScroll.set)
         #self.fileList.insert( END, 'a', 'b', 'c', 'd', 'e', 'f', 'g' )
         self.fileList.grid(row=0, column=0, sticky=N+S)
@@ -99,7 +99,7 @@ class DBCGui(Frame):
                        command=self.onFetchPart)
         self.fetchpartEntry.grid(row=0, column=0)
         self.fetchpartButton.grid(row=0, column=1)
-        
+
 
         self.deleteButton = Button( fileFrame, text='Delete',
                        command=self.onDelete)
@@ -112,7 +112,7 @@ class DBCGui(Frame):
         self.addfileButton.grid(row=0, column=1)
 
         self.searchEntry = Entry(searchFrame, width=25)
-        self.searchButton = Button(searchFrame, text='Search', 
+        self.searchButton = Button(searchFrame, text='Search',
                        command=self.onSearch)
         self.searchEntry.grid(row=0, column=0)
         self.searchButton.grid(row=0, column=1)
@@ -130,16 +130,16 @@ class DBCGui(Frame):
 
         self.removeButton = Button( pbFrame, text='Remove',
                               command=self.onRemove )
-        self.refreshButton = Button( pbFrame, text = 'Refresh', 
+        self.refreshButton = Button( pbFrame, text = 'Refresh',
                         command=self.onRefresh )
 
         self.rebuildEntry = Entry(rebuildFrame, width=25)
-        self.rebuildButton = Button( rebuildFrame, text = 'Rebuild', 
+        self.rebuildButton = Button( rebuildFrame, text = 'Rebuild',
                         command=self.onRebuild )
         self.removeButton.grid(row=0, column=0)
         self.refreshButton.grid(row=0, column=1)
         self.rebuildEntry.grid(row=0, column=0)
-        self.rebuildButton.grid(row=0, column=1) 
+        self.rebuildButton.grid(row=0, column=1)
 
     def onAdd( self ):
         # add one file to FileList
@@ -158,7 +158,7 @@ class DBCGui(Frame):
             if len(selection) == 2:
                 filename = selection[0]
                 self.cachepeer.removefile(filename)
-                for pid in self.cachepeer.getpeerids(): 
+                for pid in self.cachepeer.getpeerids():
                     self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (filename, self.cachepeer.myid) )
 
     def onSearch( self ):
@@ -175,19 +175,20 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port, filesize = selection
-                chunksize = 4000
+                chunksize = 512
                 filenum = int(filesize)/(chunksize*1024) + 1
                 resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
                 for i in xrange(len(resp)):
                     if resp[i][0] == REPLY:
-                        tmppath = os.getcwd() + '/tmp'
+                        tmppath = os.getcwd() + '/tmpfetch'
                         if not os.path.exists(tmppath):
                             os.mkdir(tmppath)
                         partfilename = tmppath+ '/' + filename + ".part." + str(i)
                         fd = file(partfilename, 'w')
                         fd.write(resp[i][1])
+                        print len(resp[i][1])
                         fd.close()
-                
+
                 #destroy the temporary files
                 for i in xrange(filenum):
                     partfilename = os.getcwd() + '/tmp/' + filename + ".part." + str(i)

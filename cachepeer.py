@@ -1,18 +1,19 @@
 #! /usr/bin/python
 
 from branchpeer import *
+from filemanager import *
 # support query type list as follow
 LIST    = "LIST"      # list all available peer nodes
 JOIN    = "JOIN"      # join the p2p network
 QUERY   = "QUER"      # query file message
 RESP    = "RESP"      # response message
-FILEGET = "FILE"      # fetch a file 
+FILEGET = "FILE"      # fetch a file
 QUIT    = "QUIT"      # quit the p2p network
 NAME    = "NAME"      # query a peer's id
 DELETE  = "DELE"      # delete local file
 FPART = "FPAR"
 
-ERROR   = "ERRO"    
+ERROR   = "ERRO"
 REPLY   = "REPL"
 
 class CachePeer( BranchPeer ):
@@ -91,7 +92,7 @@ class CachePeer( BranchPeer ):
 
 
     def __processquery(self, peerid, key, ttl):
-        """process the query message in this function, replying with either a RESP if file found, 
+        """process the query message in this function, replying with either a RESP if file found,
         or propagating msg to its all peers """
         for filename in self.cachefile.keys():
             if key in filename:
@@ -100,12 +101,12 @@ class CachePeer( BranchPeer ):
                 host, port = peerid.split(':')
                 if not filepeerid:
                     filepeerid = self.myid
-                    self.connectandsend(host, int(port), RESP, 
+                    self.connectandsend(host, int(port), RESP,
                     '%s %s %s' % ( filename, filepeerid, filesize ),
                     pid = peerid)
                     return
                 for fpid in filepeerid:
-                    self.connectandsend(host, int(port), RESP, 
+                    self.connectandsend(host, int(port), RESP,
                     '%s %s %s' % ( filename, fpid, filesize ),
                     pid = peerid)
                     return
@@ -118,7 +119,7 @@ class CachePeer( BranchPeer ):
 
 
     def __resp_handler(self, peerconn, data):
-        """handle response message, RESP, data format should be "file-name, peer-id, file-size" """   
+        """handle response message, RESP, data format should be "file-name, peer-id, file-size" """
         try:
             filename, filepeerid, filesize = data.split()
             if ( filename in self.cachefile and not self.cachefile[filename][0]):
@@ -142,35 +143,23 @@ class CachePeer( BranchPeer ):
         try:
             pathfilename = os.getcwd()+'/'+filename
             statinfo = os.stat(pathfilename)
-            path, filename = os.path.split(pathfilename)
-            tmppath = path + '/tmp'
-            if not os.path.exists(tmppath):
-                os.mkdir(tmppath)
-            print "file size: %d(kb)" % (statinfo.st_size/(1024))
-            with open(pathfilename, "rb") as f:
-                index = 0
+            chunksize = 512  # default chunksize is 512kb
+            filesize = statinfo.st_size
+            filemanager = FileManager(filesize, chunksize, pathfilename)
+
+            chunknum, tmppath = filemanager.splitFile()
+
+            for i in range(0, chunknum):
+                partfilename = "%s/%s.part.%d" % (tmppath, filename, i)
+                fd = file(partfilename, 'r')
+                filedata = ''
                 while True:
-                    chunk = f.read(4000 * 1024)
-                    if(chunk):
-                        fn = "%s/%s.part.%d" % (tmppath, filename, index)
-                        index = index + 1
-                        print "creating", fn
-                        with open(fn, "wb") as fw:
-                            fw.write(chunk)
-                    else:
-                        break
-                # end of spliting ...
-                for i in range(0, index):
-                    partfilename = "%s/%s.part.%d" % (tmppath, filename, i)
-                    fd = file(partfilename, 'r')
-                    filedata = ''
-                    while True:
-                        data = fd.read(1024)
-                        if not len(data):
-                            break;
-                        filedata += data
-                    fd.close()
-                    peerconn.senddata( REPLY, filedata)
+                    data = fd.read(1024) #send 1kb each time
+                    if not len(data):
+                        break;
+                    filedata += data
+                fd.close()
+                peerconn.senddata( REPLY, filedata)
         except:
             peerconn.senddata( ERROR, 'Error reading file')
             return
@@ -230,7 +219,7 @@ class CachePeer( BranchPeer ):
         self.__debug("Building peers from (%s,%s)" % (host,port))
         try:
             _, peerid = self.connectandsend(host, port, NAME, '')[0]
-            
+
             self.__debug("contacted " + peerid)
             resp = self.connectandsend(host, port, JOIN, '%s %s %d' %
                     (self.myid, self.serverhost, self.serverport))[0]
@@ -256,7 +245,7 @@ class CachePeer( BranchPeer ):
             if self.debug:
                 traceback.print_exc()
                 self.removepeer(peerid)
-    
+
     # get just some chunks of file indicated by chunkRange, not the whole file
     # 4/12 updated
     def __filechunkget_handler(self, peerconn, data):
@@ -265,12 +254,12 @@ class CachePeer( BranchPeer ):
         print data
         filename, part = data.split()
         # print '1'
-        tmppath= os.getcwd()+'/tmp' 
+        tmppath= os.getcwd()+'/tmp'
         if not os.path.exists(tmppath):
             # print '2'
             peerconn.senddata( ERROR, 'No Split File exists!')
             return
-        
+
         if filename not in self.cachefile:
             # print '3'
             peerconn.senddata( ERROR, 'File not found')
