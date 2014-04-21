@@ -171,7 +171,8 @@ class DBCGui(Frame):
             self.cachepeer.sendtopeer(pid, QUERY, "%s %s 4" % (self.cachepeer.myid, key))
 
         time.sleep(1)
-        self.autoFetch(key)
+        #self.autoFetch(key)
+        self.autoFetchParts(key, 4, 10)
 
     def autoFetch( self, filename ):
         #auto fetch from available peers
@@ -183,6 +184,13 @@ class DBCGui(Frame):
                 self.fetch(filename, host, port, filesize)
         except:
             print "no available peer"
+
+    def autoFetchParts( self, filename, start, end ):
+        pid = self.cachepeer.cachefile[filename][0][0]
+        if pid != None:
+            host, port = pid.split(':')
+            for i in xrange(start, end+1):
+                self.fetchPart( filename, host, port, i )
 
 
     def fetch( self, filename, host, port, filesize ):
@@ -211,6 +219,17 @@ class DBCGui(Frame):
                 filename, host, port, filesize = selection
                 self.fetch(filename, host, port, filesize)
 
+    def fetchPart( self, filename, host, port, part ):
+        resp = self.cachepeer.connectandsend( host, port, FPART, "%s %d" % (filename, int(part)) )
+        if len(resp) and resp[0][0]==REPLY:
+            tmppath = os.getcwd() + '/tmpfetch'
+            if not os.path.exists(tmppath):
+                os.mkdir(tmppath)
+            partfilename = tmppath + '/' + filename + ".part." + str(part)
+            fd = file(partfilename, 'w')
+            fd.write(resp[0][1])
+            fd.close()
+
 
     def onFetchPart( self ):
         part = self.fetchpartEntry.get()
@@ -220,13 +239,8 @@ class DBCGui(Frame):
         if len(selections) == 1:
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
-                filename, host, port, filesize = selection
-                resp = self.cachepeer.connectandsend( host, port, FPART, "%s %d" % (filename, int(part)) )
-                if len(resp) and resp[0][0]==REPLY:
-                    partfilename = os.getcwd() + '/' + filename + ".part." + part
-                    fd = file(partfilename, 'w')
-                    fd.write(resp[0][1])
-                    fd.close()
+                filename, host, port, _ = selection
+                self.fetchPart(filename, host, port, part)
 
     def onRemove( self ):
         selections = self.peerList.curselection()
