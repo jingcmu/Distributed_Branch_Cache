@@ -1,16 +1,15 @@
+import pygst
 import gst
 import pygtk
 import gtk
-from daemon import become_daemon
 
 pipeline = gst.Pipeline('mypipeline')
 
-wavefile = gst.element_factory_make('filesink')
-wavefile.set_property('location', 'test.wav')
-pipeline.add(wavefile)
+filesrc = gst.element_factory_make('filesrc')
+filesrc.set_property('location', 'test.mp3')
+pipeline.add(filesrc)
 
-
-encoder = gst.element_factory_make('ffenc_libfaac')
+encoder = gst.element_factory_make('mp3parse')
 pipeline.add(encoder)
 
 muxer = gst.element_factory_make('ffmux_mpegts')
@@ -21,14 +20,11 @@ sink.set_property('host', '127.0.0.1')
 sink.set_property('port', 9999)
 pipeline.add(sink)
 
-#alsasrc.link(wavepack)
-#wavepack.link(wavefile)
 
-wavefile.link(encoder)
+filesrc.link(encoder)
 encoder.link(muxer)
 muxer.link(sink)
 
 pipeline.set_state(gst.STATE_PLAYING)
 
-#become_daemon()
 gtk.main()
