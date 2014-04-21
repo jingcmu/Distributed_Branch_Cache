@@ -1,12 +1,14 @@
 # !/usr/bin/env/python
 
 import sys
+import time
 import threading
 from filemanager import *
 from Tkinter import *
 from random import *
 from cachepeer import *
 
+CHUNKSIZE = 512
 
 class DBCGui(Frame):
     def __init__(self, firstpeer, hops=2, maxpeers=5, serverport=5678, master=None):
@@ -27,35 +29,6 @@ class DBCGui(Frame):
 
         self.cachepeer.startstabilizer( self.cachepeer.checklivepeers, 3)
         self.after(3000, self.onTimer)
-
-    def onTimer( self ):
-        self.onRefresh()
-        self.after(3000, self.onTimer)
-
-
-    def __onDestroy( self, event ):
-        self.cachepeer.shutdown = True
-
-    def updatePeerList( self ):
-        """ first remove all peers in the list, then insert peers one by one """
-        if self.peerList.size() > 0:
-            self.peerList.delete(0, self.peerList.size()-1)
-        for pid in self.cachepeer.getpeerids():
-            # print pid
-            self.peerList.insert(END, pid)
-
-    def updateFileList( self ):
-        if self.fileList.size() > 0:
-            self.fileList.delete(0, self.fileList.size()-1)
-        for filename in self.cachepeer.cachefile:
-            pid = self.cachepeer.cachefile[filename][0]
-            filesize = self.cachepeer.cachefile[filename][1]
-            if not pid:
-                pid = '(local)'
-                self.fileList.insert( END, "%s:%s:%s" % (filename, pid, filesize))
-            else:
-                for p in pid:
-                    self.fileList.insert( END, "%s:%s:%s" % (filename, p, filesize))
 
     def creatWidgets( self ):
 
@@ -161,6 +134,34 @@ class DBCGui(Frame):
                 for pid in self.cachepeer.getpeerids():
                     self.cachepeer.sendtopeer( pid, DELETE, "%s %s" % (filename, self.cachepeer.myid) )
 
+    def onTimer( self ):
+        self.onRefresh()
+        self.after(3000, self.onTimer)
+
+    def __onDestroy( self, event ):
+        self.cachepeer.shutdown = True
+
+    def updatePeerList( self ):
+        """ first remove all peers in the list, then insert peers one by one """
+        if self.peerList.size() > 0:
+            self.peerList.delete(0, self.peerList.size()-1)
+        for pid in self.cachepeer.getpeerids():
+            # print pid
+            self.peerList.insert(END, pid)
+
+    def updateFileList( self ):
+        if self.fileList.size() > 0:
+            self.fileList.delete(0, self.fileList.size()-1)
+        for filename in self.cachepeer.cachefile:
+            pid = self.cachepeer.cachefile[filename][0]
+            filesize = self.cachepeer.cachefile[filename][1]
+            if not pid:
+                pid = '(local)'
+                self.fileList.insert( END, "%s:%s:%s" % (filename, pid, filesize))
+            else:
+                for p in pid:
+                    self.fileList.insert( END, "%s:%s:%s" % (filename, p, filesize))
+
     def onSearch( self ):
         # search on peers
         key = self.searchEntry.get()
@@ -169,6 +170,38 @@ class DBCGui(Frame):
         for pid in self.cachepeer.getpeerids():
             self.cachepeer.sendtopeer(pid, QUERY, "%s %s 4" % (self.cachepeer.myid, key))
 
+        time.sleep(1)
+        self.autoFetch(key)
+
+    def autoFetch( self, filename ):
+        #auto fetch from available peers
+        try:
+            pid = self.cachepeer.cachefile[filename][0][0] #the ip:port of the the first peer
+            filesize = self.cachepeer.cachefile[filename][1]
+            if pid != None:
+                host, port = pid.split(':')
+                self.fetch(filename, host, port, filesize)
+        except:
+            print "no available peer"
+
+
+    def fetch( self, filename, host, port, filesize ):
+        resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
+        for i in xrange(len(resp)):
+            if resp[i][0] == REPLY:
+                tmppath = os.getcwd() + '/tmpfetch'
+                if not os.path.exists(tmppath):
+                    os.mkdir(tmppath)
+                partfilename = tmppath+ '/' + filename + ".part." + str(i)
+                fd = file(partfilename, 'w')
+                fd.write(resp[i][1])
+                print len(resp[i][1])
+                fd.close()
+
+        # combine the temporary files
+        filemanager = FileManager(int(filesize), CHUNKSIZE, os.getcwd() + '/' + filename)
+        filemanager.combineFile()
+
     def onFetch( self ):
         # fetch file
         selections = self.fileList.curselection()
@@ -176,24 +209,7 @@ class DBCGui(Frame):
             selection = self.fileList.get(selections[0]).split(':')
             if len(selection) > 2:
                 filename, host, port, filesize = selection
-                chunksize = 512
-                filenum = int(filesize)/(chunksize*1024) + 1
-                resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
-                for i in xrange(len(resp)):
-                    if resp[i][0] == REPLY:
-                        tmppath = os.getcwd() + '/tmpfetch'
-                        if not os.path.exists(tmppath):
-                            os.mkdir(tmppath)
-                        partfilename = tmppath+ '/' + filename + ".part." + str(i)
-                        fd = file(partfilename, 'w')
-                        fd.write(resp[i][1])
-                        print len(resp[i][1])
-                        fd.close()
-
-        # combine the temporary files
-        filemanager = FileManager(int(filesize), chunksize, os.getcwd() + '/' + filename)
-        filemanager.combineFile()
-
+                self.fetch(filename, host, port, filesize)
 
 
     def onFetchPart( self ):
