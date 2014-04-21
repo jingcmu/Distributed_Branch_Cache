@@ -74,7 +74,14 @@ def input_loop(app):
         print 'Lost input stream from', addr
     
  
-application = LiveHTTPStreamer()
-t1 = Thread(target=input_loop, args=[application])
-t1.setDaemon(True)
-t1.start()
+if __name__ == '__main__':
+    
+    app = LiveHTTPStreamer()
+    server = WSGIServer(app, bindAddress=('', 9998))
+
+    t1 = Thread(target=input_loop, args=[app])
+    t1.setDaemon(True)
+    t1.start()
+
+    server.run()
+
