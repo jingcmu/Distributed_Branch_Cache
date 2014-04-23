@@ -38,7 +38,7 @@ class LiveHTTPStreamer(object):
     	print "init"
         self.urls = [
             ('^/stream.m3u8$', self.index),
-            ('^/stream.ts$', self.stream),
+            ('^/stream.webm$', self.stream),
         ]
         self.urls = [(re.compile(pattern), func) for pattern, func in self.urls]
         self.queues = []
@@ -50,9 +50,7 @@ class LiveHTTPStreamer(object):
         for pattern, func in self.urls:
             match = pattern.match(request.path_info)
             if match:
-            	print "match"
                 return func(start_response, request, match)
-        print "not match"
         return self.redirect(start_response, request, match)
 
     def redirect(self, start_response, request, match):
@@ -62,12 +60,12 @@ class LiveHTTPStreamer(object):
     def index(self, start_response, request, match):
         start_response('200 OK', [('Content-type', 'application/x-mpegURL')])
         return ['''#EXTM3U
-					#EXTINF:10,
-					http://127.0.0.1:9998/San_Diego_Clip.ts
-					#EXT-X-ENDLIST''']
+#EXTINF:10,
+http://128.237.250.181:9998/stream.ts
+#EXT-X-ENDLIST''']
 
     def stream(self, start_response, request, match):
-        start_response('200 OK', [('Content-type', 'video/MP2T')])
+        start_response('200 OK', [('Content-type', 'video/webm')])
         q = Queue()
         self.queues.append(q)
         print 'Starting output stream for', request.remote_addr
@@ -84,6 +82,7 @@ def input_loop(app):
     sock = socket()
     sock.bind(('', 9999))
     sock.listen(1)
+    # fo = open("stream.ogg", "a+")
     while True:
         print 'Waiting for input stream'
         sd, addr = sock.accept()
@@ -92,14 +91,9 @@ def input_loop(app):
         while data:
             readable = select([sd], [], [], 0.1)[0]
             for s in readable:
-                data = s.recv(1024)
+                data = s.recv(1024*1024*4)
                 if not data:
                     break
-                q = Queue()
-                # print "before"
-                # q.put(data)
-                # print q.get()
-                # print "after"
                 for q in app.queues:
                     q.put(data)
         print 'Lost input stream from', addr
