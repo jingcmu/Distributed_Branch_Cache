@@ -9,10 +9,11 @@ import thread
 import traceback
 import os
 import time
+import json
 
-HOST = '127.0.0.1'   # Symbolic name meaning all available interfaces
+HOST = '128.237.252.161'   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
-DIR_PATH = 'E:/18842/Project/testserver/'
+DIR_PATH = '/home/masterk/18842/project/myserver/'
 BUFSIZE = 4096
 METADATA_FILE = DIR_PATH + 'metadata.txt'
 DEBUG = True
@@ -43,8 +44,8 @@ if DEBUG:
 filesmatadata = {}
 with open(METADATA_FILE, 'r') as f:
     for line in f:
-        fname, hashcode = line.split('\t')
-        filesmatadata[fname] = hashcode
+        fname, hashcode, fsize = line.split('\t')
+        filesmatadata[fname] = hashcode + ' ' + fsize
         if DEBUG:
             print line,
 
@@ -71,6 +72,9 @@ def sendfile(clientsocket, filename):
         reply = 'File Not Found'
         clientsocket.send(reply)
 
+def sendfilelist(clientsocket):
+    clientsocket.send("returnfilelist")
+    clientsocket.send(json.dumps(filesmatadata))
 
 #Function for handling connections. This will be used to create threads
 def clientthread_handler(clientsocket):
@@ -82,10 +86,14 @@ def clientthread_handler(clientsocket):
             if not data:
                 print "Data from client is None, break connection"
                 break
+            
+            if '\t' in data:
+                msg = data.split('\t')
+                msgtype = msg[0]
+                fname = msg[1]
+            else:
+                msgtype = data
 
-            msg = data.split('\t')
-            msgtype = msg[0]
-            fname = msg[1]
             if DEBUG:
                 print "server received data : ", data
                 print 'msgtype = ', msgtype
@@ -94,15 +102,19 @@ def clientthread_handler(clientsocket):
             # deal with request of metadata
             if msgtype == 'getmeta':
                 try:
-                    hashcode = filesmatadata[fname]
+                    metadata = filesmatadata[fname]
+                    if DEBUG:
+                        print 'send meata data: ', metadata
                     clientsocket.send('returnmeta')
-                    clientsocket.send(hashcode)
+                    clientsocket.send(metadata)
                 except KeyError:
                     clientsocket.send('File Metadata Not Found')
 
             # deal with request of file
             elif msgtype == 'getfile':
                 sendfile(clientsocket, fname)
+            elif msgtype == 'getfilelist':
+                sendfilelist(clientsocket)
             else:
                 reply = 'Bad Request'
                 clientsocket.send(reply)
