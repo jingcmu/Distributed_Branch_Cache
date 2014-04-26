@@ -11,7 +11,7 @@ from cachepeer import *
 CHUNKSIZE = 512
 
 class DBCGui(Frame):
-    def __init__(self, firstpeer, hops=2, maxpeers=5, serverport=5678, master=None):
+    def __init__(self, firstpeer, hops=2, maxpeers=5, serverport=5678, master=None, cachepath = './'):
         Frame.__init__(self, master)
         self.grid()
         self.creatWidgets()
@@ -22,6 +22,9 @@ class DBCGui(Frame):
         host, port = firstpeer.split(":")
         self.cachepeer.buildpeers( host, int(port), hops=hops )
         self.updatePeerList()
+
+        logfile = cachepath + '/logfile'
+        self.cachepeer.addfile( logfile )
 
         # start cachepeer thread
         t = threading.Thread( target=self.cachepeer.mainloop, args=[])
@@ -278,13 +281,14 @@ class DBCGui(Frame):
 
 def main():
     if len(sys.argv) < 4:
-        print "Syntax: %s server-port max-peers peer-ip:port" % sys.argv[0]
+        print "Syntax: %s server-port max-peers peer-ip:port cache-path" % sys.argv[0]
         sys.exit(-1)
-
     serverport = int(sys.argv[1])
     maxpeers = sys.argv[2]
     peerid = sys.argv[3]
-    app = DBCGui( firstpeer=peerid, maxpeers=maxpeers, serverport=serverport )
+    if len(sys.argv) > 4:
+        cache_path = sys.argv[4]
+    app = DBCGui( firstpeer=peerid, maxpeers=maxpeers, serverport=serverport, cachepath = cache_path)
     app.mainloop()
 
 

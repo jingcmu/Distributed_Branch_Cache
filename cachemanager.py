@@ -26,7 +26,7 @@ class CacheManager:
         return LRU
 
     def updateCache(self):
-        if True: #self.size > self.capacity * 0.9:
+        if self.size > self.capacity * 0.9:
             # get the last file's hash code in the LRU list
             hashcode = self.LRU[self.filecount-1]
             # get the last file's name

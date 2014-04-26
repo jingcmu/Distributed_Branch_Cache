@@ -2,6 +2,7 @@
 
 from branchpeer import *
 from filemanager import *
+import linecache
 # support query type list as follow
 LIST    = "LIST"      # list all available peer nodes
 JOIN    = "JOIN"      # join the p2p network
@@ -195,17 +196,19 @@ class CachePeer( BranchPeer ):
             self.peerlock.release()
 
 
-
-
     def __name_handler(self, peerconn, data):
         """handle query peer node id message, NAME, data is not needed"""
         peerconn.senddata(REPLY, self.myid)
 
-    def addfile( self, filename ):
+    def addfile( self, logfile ):
         """add file into local cache based on LRU policy"""
-        pathfilename = os.getcwd()+'/'+filename
-        statinfo = os.stat(pathfilename)
-        self.cachefile[filename] = (None, statinfo.st_size)
+        lines = linecache.getlines(logfile)
+        for i in xrange(len(lines)):
+            fileinfo = lines[i].split(" ")
+            hashcode = fileinfo[0]
+            filename = fileinfo[1]
+            filesize = fileinfo[2]
+            self.cachefile[filename] = (None, filesize)
 
     def removefile(self, filename):
         """remove file from the local cache based on LRU policy """
