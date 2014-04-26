@@ -11,7 +11,7 @@ from cachepeer import *
 CHUNKSIZE = 512
 
 class DBCGui(Frame):
-    def __init__(self, firstpeer, hops=2, maxpeers=5, serverport=5678, master=None):
+    def __init__(self, firstpeer, hops=2, maxpeers=5, serverport=5678, master=None, cachepath = './'):
         Frame.__init__(self, master)
         self.grid()
         self.creatWidgets()
@@ -22,6 +22,9 @@ class DBCGui(Frame):
         host, port = firstpeer.split(":")
         self.cachepeer.buildpeers( host, int(port), hops=hops )
         self.updatePeerList()
+
+        logfile = cachepath + '/logfile'
+        self.cachepeer.addfile( logfile )
 
         # start cachepeer thread
         t = threading.Thread( target=self.cachepeer.mainloop, args=[])
@@ -163,37 +166,48 @@ class DBCGui(Frame):
                     self.fileList.insert( END, "%s:%s:%s" % (filename, p, filesize))
 
     def onSearch( self ):
-        # search on peers
-        key = self.searchEntry.get()
-        self.searchEntry.delete(0, len(key))
+        # search on peers and auto fetch file or parts
+        filename = self.searchEntry.get()
+        self.searchEntry.delete(0, len(filename))
 
         for pid in self.cachepeer.getpeerids():
-            self.cachepeer.sendtopeer(pid, QUERY, "%s %s 4" % (self.cachepeer.myid, key))
+            self.cachepeer.sendtopeer(pid, QUERY, "%s %s 4" % (self.cachepeer.myid, filename))
 
         time.sleep(1)
-        #self.autoFetch(key)
-        self.autoFetchParts(key, 4, 10)
+        pid = self.cachepeer.cachefile[filename][0]
+        filesize = self.cachepeer.cachefile[filename][1]
+        #self.autoFetch(filename, pid[0], filesize) #test fetch whole file
 
-    def autoFetch( self, filename ):
+        # arrange chunks to peers
+        pid_num = len(pid)
+        chunk_num = int(filesize)/(CHUNKSIZE*1024) + 1
+        chunk_per_peer = chunk_num/pid_num
+
+        for i in xrange(pid_num-1):
+            print "pid = ", pid[i]
+            self.autoFetchParts(pid[i], filename, i*chunk_per_peer, (i+1)*chunk_per_peer)
+        # last peer in charge of the remaining chunks
+        self.autoFetchParts(pid[pid_num-1], filename, (pid_num-1)*chunk_per_peer, chunk_num)
+
+    def autoFetch( self, filename, pid, filesize ):
         #auto fetch from available peers
         try:
-            pid = self.cachepeer.cachefile[filename][0][0] #the ip:port of the the first peer
-            filesize = self.cachepeer.cachefile[filename][1]
             if pid != None:
                 host, port = pid.split(':')
                 self.fetch(filename, host, port, filesize)
         except:
             print "no available peer"
 
-    def autoFetchParts( self, filename, start, end ):
-        pid = self.cachepeer.cachefile[filename][0][0]
+    def autoFetchParts( self, pid, filename, start, end ):
+        #auto fetch parts[start, end) from available peers
         if pid != None:
             host, port = pid.split(':')
-            for i in xrange(start, end+1):
+            for i in xrange(start, end):
                 self.fetchPart( filename, host, port, i )
 
 
     def fetch( self, filename, host, port, filesize ):
+        # fetch whole file from host:port
         resp = self.cachepeer.connectandsend( host, port, FILEGET, filename)
         for i in xrange(len(resp)):
             if resp[i][0] == REPLY:
@@ -220,6 +234,7 @@ class DBCGui(Frame):
                 self.fetch(filename, host, port, filesize)
 
     def fetchPart( self, filename, host, port, part ):
+        # fetch part from host:port
         resp = self.cachepeer.connectandsend( host, port, FPART, "%s %d" % (filename, int(part)) )
         if len(resp) and resp[0][0]==REPLY:
             tmppath = os.getcwd() + '/tmpfetch'
@@ -229,7 +244,6 @@ class DBCGui(Frame):
             fd = file(partfilename, 'w')
             fd.write(resp[0][1])
             fd.close()
-
 
     def onFetchPart( self ):
         part = self.fetchpartEntry.get()
@@ -267,13 +281,14 @@ class DBCGui(Frame):
 
 def main():
     if len(sys.argv) < 4:
-        print "Syntax: %s server-port max-peers peer-ip:port" % sys.argv[0]
+        print "Syntax: %s server-port max-peers peer-ip:port cache-path" % sys.argv[0]
         sys.exit(-1)
-
     serverport = int(sys.argv[1])
     maxpeers = sys.argv[2]
     peerid = sys.argv[3]
-    app = DBCGui( firstpeer=peerid, maxpeers=maxpeers, serverport=serverport )
+    if len(sys.argv) > 4:
+        cache_path = sys.argv[4]
+    app = DBCGui( firstpeer=peerid, maxpeers=maxpeers, serverport=serverport, cachepath = cache_path)
     app.mainloop()
 
 
