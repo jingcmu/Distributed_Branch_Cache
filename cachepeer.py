@@ -143,7 +143,7 @@ class CachePeer( BranchPeer ):
             peerconn.senddata( ERROR, 'File not found')
             return
         try:
-            pathfilename = os.getcwd()+'/'+filename
+            pathfilename = os.getcwd()+'/cache_path/'+filename
             statinfo = os.stat(pathfilename)
             chunksize = 512  # default chunksize is 512kb
             filesize = statinfo.st_size
@@ -207,9 +207,9 @@ class CachePeer( BranchPeer ):
         for i in xrange(len(lines)):
             fileinfo = lines[i].split(" ")
             hashcode = fileinfo[0]
-            filename = fileinfo[1]
+            #filename = fileinfo[1]
             filesize = fileinfo[2]
-            self.cachefile[filename] = (None, filesize)
+            self.cachefile[hashcode] = (None, filesize)
 
     def removefile(self, filename):
         """remove file from the local cache based on LRU policy """
@@ -255,11 +255,11 @@ class CachePeer( BranchPeer ):
     def __filechunkget_handler(self, peerconn, data):
         """handle file get message by a range of chunk, data format "file-name part-number" """
         # print '0'
-        print "-----------------come to here!!!!!"
-        print data
+        #print "-----------------come to here!!!!!"
+        #print data
         filename, part = data.split()
         # print '1'
-        tmppath= os.getcwd()+'/tmp'
+        tmppath= os.getcwd()+'/cache_path/tmp'
         if not os.path.exists(tmppath):
             os.mkdir(tmppath)
 
@@ -270,7 +270,7 @@ class CachePeer( BranchPeer ):
         try:
             partfilename = "%s/%s.part.%d" % ( tmppath, filename, int(part) )
             if not os.path.exists(partfilename):
-                pathfilename = os.getcwd()+'/'+filename
+                pathfilename = os.getcwd()+'/cache_path/'+filename
                 statinfo = os.stat(pathfilename)
                 chunksize = 512  # default chunksize is 512kb
                 filesize = statinfo.st_size

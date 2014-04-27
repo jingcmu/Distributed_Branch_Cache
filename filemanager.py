@@ -67,7 +67,7 @@ class FileManager:
 				filename = tmppathfilename + ".part." + str(i)
 				if os.path.exists(filename):
 					os.remove(filename)
-					print "destroyed ", filename
+					#print "destroyed ", filename
 				else:
 					print "missing part " + str(i)
 		print "combine finished"

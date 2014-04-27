@@ -5,7 +5,7 @@ Created on Apr 10, 2014
 '''
 import hashlib
 from sys import argv
-
+import os
 def md5_for_file(pathfilename, block_size=2**20):
     """ to get md5 hash for a file, return a string of md5 """
     md5 = hashlib.md5()
@@ -21,9 +21,9 @@ def md5_for_file(pathfilename, block_size=2**20):
 #test
 def test_md5():
     pathfilename1 = argv[1]
-    pathfilename2 = argv[2]
-    hash1 = md5_for_file(pathfilename1)
-    hash2 = md5_for_file(pathfilename2)
-    print hash1 == hash2
+    print os.path.getsize(pathfilename1)
+    hash = md5_for_file(pathfilename1)
+    #hash2 = md5_for_file(pathfilename2)
+    print hash
 
 test_md5()
