@@ -3,6 +3,7 @@
 from branchpeer import *
 from filemanager import *
 import linecache
+from cachemanager import *
 # support query type list as follow
 LIST    = "LIST"      # list all available peer nodes
 JOIN    = "JOIN"      # join the p2p network
@@ -19,7 +20,7 @@ REPLY   = "REPL"
 
 class CachePeer( BranchPeer ):
 
-    def __init__(self, maxpeers, serverport):
+    def __init__(self, maxpeers, serverport, cachepath):
         BranchPeer.__init__(self, maxpeers, serverport)
         self.cachefile = {} # local cache file  mapping: file-name --> peer id
         self.addrouter(self.__router)
@@ -36,6 +37,7 @@ class CachePeer( BranchPeer ):
         }
         for msgtype in handlers:
             self.addhandler(msgtype, handlers[msgtype])
+        self.cachemanager = CacheManager(cachepath)
 
     def __debug( self, msg ):
         if self.__debug:
@@ -137,21 +139,23 @@ class CachePeer( BranchPeer ):
 
     def __fileget_handler(self, peerconn, data):
         """handle file get message, FILEGET data format should  a string "file-name" """
-        filename = data
-        if filename not in self.cachefile:
+        hashcode = data
+        if hashcode not in self.cachefile:
             peerconn.senddata( ERROR, 'File not found')
             return
         try:
-            pathfilename = os.getcwd()+'/'+filename
+            pathfilename = os.getcwd()+'/cache_path/'+hashcode
             statinfo = os.stat(pathfilename)
             chunksize = 512  # default chunksize is 512kb
             filesize = statinfo.st_size
             filemanager = FileManager(filesize, chunksize, pathfilename)
 
             chunknum, tmppath = filemanager.splitFile()
+            self.cachemanager.LRUmaintain(hashcode)
+            self.cachemanager.updatelogfile()
 
             for i in range(0, chunknum):
-                partfilename = "%s/%s.part.%d" % (tmppath, filename, i)
+                partfilename = "%s/%s.part.%d" % (tmppath, hashcode, i)
                 fd = file(partfilename, 'r')
                 filedata = ''
                 while True:
@@ -206,9 +210,8 @@ class CachePeer( BranchPeer ):
         for i in xrange(len(lines)):
             fileinfo = lines[i].split(" ")
             hashcode = fileinfo[0]
-            filename = fileinfo[1]
-            filesize = fileinfo[2]
-            self.cachefile[filename] = (None, filesize)
+            filesize = fileinfo[1]
+            self.cachefile[hashcode] = (None, filesize)
 
     def removefile(self, filename):
         """remove file from the local cache based on LRU policy """
@@ -254,22 +257,24 @@ class CachePeer( BranchPeer ):
     def __filechunkget_handler(self, peerconn, data):
         """handle file get message by a range of chunk, data format "file-name part-number" """
         # print '0'
-        print "-----------------come to here!!!!!"
-        print data
-        filename, part = data.split()
+        #print "-----------------come to here!!!!!"
+        #print data
+        hashcode, part = data.split()
         # print '1'
-        tmppath= os.getcwd()+'/tmp'
+        tmppath= os.getcwd()+'/cache_path/tmp'
         if not os.path.exists(tmppath):
             os.mkdir(tmppath)
 
-        if filename not in self.cachefile:
+        if hashcode not in self.cachefile:
             # print '3'
             peerconn.senddata( ERROR, 'File not found')
             return
         try:
-            partfilename = "%s/%s.part.%d" % ( tmppath, filename, int(part) )
+            partfilename = "%s/%s.part.%d" % ( tmppath, hashcode, int(part) )
+            self.cachemanager.LRUmaintain(hashcode)
+            self.cachemanager.updatelogfile()
             if not os.path.exists(partfilename):
-                pathfilename = os.getcwd()+'/'+filename
+                pathfilename = os.getcwd()+'/cache_path/'+hashcode
                 statinfo = os.stat(pathfilename)
                 chunksize = 512  # default chunksize is 512kb
                 filesize = statinfo.st_size

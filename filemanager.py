@@ -48,7 +48,7 @@ class FileManager:
 		path, filename = os.path.split(self.pathfilename)
 		tmppath = path + '/tmpfetch'
 		tmppathfilename = tmppath + '/' + filename
-		DBC_filename = path + '/DBC_' + filename
+		DBC_filename = path + '/' + filename
 		with open(DBC_filename, "ab+") as fw:
 			for i in xrange(filenum):
 				filename = tmppathfilename + ".part." + str(i)
@@ -67,7 +67,7 @@ class FileManager:
 				filename = tmppathfilename + ".part." + str(i)
 				if os.path.exists(filename):
 					os.remove(filename)
-					print "destroyed ", filename
+					#print "destroyed ", filename
 				else:
 					print "missing part " + str(i)
 		print "combine finished"
