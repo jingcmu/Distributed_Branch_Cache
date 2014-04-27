@@ -3,13 +3,18 @@ import linecache
 from sys import argv
 
 class CacheManager:
-    def __init__( self, cachepath, logfile, capacity, debug=False ):
+    def __init__( self, cachepath, capacity = 4*(2**30), debug=False ): # default capacity is 4G
         self.cachepath = cachepath
-        self.logfile = cachepath + '\\' + logfile
+        self.logfile = cachepath + '/logfile'
         self.capacity = capacity
         self.lines = linecache.getlines(self.logfile) # lines in logfile
         self.size, self.filecount = self.getSize()
         self.LRU = self.initLRU()
+
+    def newlog( self, hashcode, filesize):
+        self.LRU.insert(0, hashcode)
+        self.lines.append( hashcode + " " + filesize + "\n")
+        self.updatelogfile() # update the logfile
 
     def getSize(self):
         size = 0
@@ -30,8 +35,7 @@ class CacheManager:
             # get the last file's hash code in the LRU list
             hashcode = self.LRU[self.filecount-1]
             # get the last file's name
-            filename = self.findFile(hashcode, True)
-            filename = self.cachepath + '\\' + filename
+            filename = self.cachepath + '/' + hashcode
             # remove the last file in the LRU list
             if os.path.exists(filename):
                 os.remove(filename)
@@ -42,11 +46,13 @@ class CacheManager:
             self.filecount -= 1
             self.writeLog()
 
-    def writeLog(self):
+    def updatelogfile(self):
         # update the logfile
         with open(self.logfile, "wt") as f:
-            for i in xrange(len(self.lines)):
-                f.write(self.lines[i])
+            for i in xrange(len(self.LRU)):
+                for j in xrange(len(self.lines)):
+                    if self.lines[j].find(self.LRU[i]) != -1:
+                        f.write(self.lines[j])
             f.close()
 
     def LRUmaintain(self, hashcode):
@@ -54,13 +60,3 @@ class CacheManager:
             if self.LRU[i] == hashcode:
                 self.LRU.remove(hashcode)
                 self.LRU.insert(0, hashcode)
-
-    def findFile(self, hashcode, delet = False):
-        # delet: whether delete the file record
-        for i in xrange(len(self.lines)):
-            strlist = self.lines[i].split(' ')
-            if strlist[0] == hashcode:
-                if delet:
-                    self.lines.remove(self.lines[i])
-                return strlist[1]
-        return None
