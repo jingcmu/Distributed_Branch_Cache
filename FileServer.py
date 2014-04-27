@@ -10,13 +10,41 @@ import traceback
 import os
 import time
 import json
+import hashlib
 
-HOST = '128.237.252.161'   # Symbolic name meaning all available interfaces
+HOST = '128.237.169.215'   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
-DIR_PATH = '/home/masterk/18842/project/myserver/'
+DIR_PATH = '/home/masterk/18842/project/resource/'
 BUFSIZE = 4096
-METADATA_FILE = DIR_PATH + 'metadata.txt'
+#METADATA_FILE = DIR_PATH + 'metadata.txt'
 DEBUG = True
+
+def md5_for_file(pathfilename, block_size=2**20):
+        """ to get md5 hash for a file, return string """
+        md5 = hashlib.md5()
+        with open(pathfilename, "rb") as f:
+            while True:
+                data = f.read(block_size)
+                if not data:
+                    break
+                md5.update(data)
+        return md5.hexdigest()
+
+def scanfiles(path):
+    if not os.path.isdir(path):
+        print 'err in scan file path'
+        return None
+
+    filesmatadata = {}
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            fullname = os.path.join(root, name)
+            hashcode = md5_for_file(fullname)
+            filesmatadata[name] = hashcode
+            if DEBUG:
+                print name, hashcode
+    return filesmatadata
+
 
 # main program start here:
 if DEBUG:
@@ -40,6 +68,7 @@ s.listen(10)
 if DEBUG:
     print 'Socket now listening'
 
+"""
 # read files matadata for future response
 filesmatadata = {}
 with open(METADATA_FILE, 'r') as f:
@@ -48,6 +77,8 @@ with open(METADATA_FILE, 'r') as f:
         filesmatadata[fname] = hashcode + ' ' + fsize
         if DEBUG:
             print line,
+"""
+filesmatadata = scanfiles(DIR_PATH)
 
 def sendfile(clientsocket, filename):
     fn = DIR_PATH + filename
