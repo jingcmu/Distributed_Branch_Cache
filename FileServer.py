@@ -36,15 +36,18 @@ def scanfiles(path):
         return None
 
     filesmatadata = {}
+    metalist = []
     for root, dirs, files in os.walk(path):
         for name in files:
+            fname = name.split('.')[0]
             fullname = os.path.join(root, name)
             hashcode = md5_for_file(fullname)
-            filesmatadata[name] = hashcode
+            fsize = os.path.getsize(fullname)
+            filesmatadata[hashcode] = fname
+            metalist.append((fname, hashcode, fsize))
             if DEBUG:
-                print name, hashcode
-    return filesmatadata
-
+                print fname, hashcode, fsize
+    return filesmatadata, metalist
 
 # main program start here:
 if DEBUG:
@@ -78,10 +81,11 @@ with open(METADATA_FILE, 'r') as f:
         if DEBUG:
             print line,
 """
-filesmatadata = scanfiles(DIR_PATH)
+filesmatadata, metalist = scanfiles(DIR_PATH)
 
 def sendfile(clientsocket, filename):
-    fn = DIR_PATH + filename
+    # need to add file type
+    fn = DIR_PATH + filename + ".mp4"
     # if requested file exists
     if os.path.exists(fn):
         if DEBUG:
@@ -105,7 +109,7 @@ def sendfile(clientsocket, filename):
 
 def sendfilelist(clientsocket):
     clientsocket.send("returnfilelist")
-    clientsocket.send(json.dumps(filesmatadata))
+    clientsocket.send(json.dumps(metalist))
 
 #Function for handling connections. This will be used to create threads
 def clientthread_handler(clientsocket):
@@ -121,19 +125,19 @@ def clientthread_handler(clientsocket):
             if '\t' in data:
                 msg = data.split('\t')
                 msgtype = msg[0]
-                fname = msg[1]
+                hashcode = msg[1]
             else:
                 msgtype = data
 
             if DEBUG:
                 print "server received data : ", data
                 print 'msgtype = ', msgtype
-                print 'fname = ', fname
+                print 'hashcode = ', hashcode
 
             # deal with request of metadata
             if msgtype == 'getmeta':
                 try:
-                    metadata = filesmatadata[fname]
+                    metadata = hashcode
                     if DEBUG:
                         print 'send meata data: ', metadata
                     clientsocket.send('returnmeta')
@@ -143,6 +147,7 @@ def clientthread_handler(clientsocket):
 
             # deal with request of file
             elif msgtype == 'getfile':
+                fname = filesmatadata[hashcode]
                 sendfile(clientsocket, fname)
             elif msgtype == 'getfilelist':
                 sendfilelist(clientsocket)
