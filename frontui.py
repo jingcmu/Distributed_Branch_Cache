@@ -16,7 +16,7 @@ class DBCGui(Frame):
         self.grid()
         self.creatWidgets()
         self.master.title("Distribute Branch Cache GUI %d" % serverport)
-        self.cachepeer = CachePeer( maxpeers, serverport )
+        self.cachepeer = CachePeer( maxpeers, serverport, cachepath )
         self.bind("<Destroy>", self.__onDestroy)
 
         host, port = firstpeer.split(":")
@@ -232,6 +232,7 @@ class DBCGui(Frame):
         # combine the temporary files
         filemanager = FileManager(int(filesize), CHUNKSIZE, os.getcwd() + '/cache_path/' + hashcode)
         filemanager.combineFile()
+        self.cachepeer.cachemanager.newlog(hashcode, filesize)
 
     def autoFetch( self, hashcode, pid, filesize ):
         #auto fetch from available peers
