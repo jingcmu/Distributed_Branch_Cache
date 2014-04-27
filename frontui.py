@@ -173,7 +173,7 @@ class DBCGui(Frame):
         for pid in self.cachepeer.getpeerids():
             self.cachepeer.sendtopeer(pid, QUERY, "%s %s 4" % (self.cachepeer.myid, filename))
 
-        time.sleep(1)
+        time.sleep(10)
         pid = self.cachepeer.cachefile[filename][0]
         filesize = self.cachepeer.cachefile[filename][1]
         #self.autoFetch(filename, pid[0], filesize) #test fetch whole file

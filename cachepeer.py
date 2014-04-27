@@ -122,6 +122,7 @@ class CachePeer( BranchPeer ):
     def __resp_handler(self, peerconn, data):
         """handle response message, RESP, data format should be "file-name, peer-id, file-size" """
         try:
+            print "resp..."
             filename, filepeerid, filesize = data.split()
             if ( filename in self.cachefile and not self.cachefile[filename][0]):
                 pass
