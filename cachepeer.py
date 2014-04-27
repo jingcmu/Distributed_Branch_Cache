@@ -254,8 +254,8 @@ class CachePeer( BranchPeer ):
     def __filechunkget_handler(self, peerconn, data):
         """handle file get message by a range of chunk, data format "file-name part-number" """
         # print '0'
-        print "-----------------come to here!!!!!"
-        print data
+        #print "-----------------come to here!!!!!"
+        #print data
         filename, part = data.split()
         # print '1'
         tmppath= os.getcwd()+'/cache_path/tmp'
