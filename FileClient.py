@@ -6,7 +6,7 @@ Ke Li, 2014/4/14
 
 import socket
 
-HOST = '128.237.252.161'   # Symbolic name meaning all available interfaces
+HOST = '128.237.169.215'   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
 DIR_PATH = '/home/masterk/18842/project/myclient/'
 BUFSIZE = 4096

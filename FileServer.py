@@ -10,13 +10,44 @@ import traceback
 import os
 import time
 import json
+import hashlib
 
-HOST = '128.237.252.161'   # Symbolic name meaning all available interfaces
+HOST = '128.237.169.215'   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
-DIR_PATH = '/home/masterk/18842/project/myserver/'
+DIR_PATH = '/home/masterk/18842/project/resource/'
 BUFSIZE = 4096
-METADATA_FILE = DIR_PATH + 'metadata.txt'
+#METADATA_FILE = DIR_PATH + 'metadata.txt'
 DEBUG = True
+
+def md5_for_file(pathfilename, block_size=2**20):
+        """ to get md5 hash for a file, return string """
+        md5 = hashlib.md5()
+        with open(pathfilename, "rb") as f:
+            while True:
+                data = f.read(block_size)
+                if not data:
+                    break
+                md5.update(data)
+        return md5.hexdigest()
+
+def scanfiles(path):
+    if not os.path.isdir(path):
+        print 'err in scan file path'
+        return None
+
+    filesmatadata = {}
+    metalist = []
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            fname = name.split('.')[0]
+            fullname = os.path.join(root, name)
+            hashcode = md5_for_file(fullname)
+            fsize = os.path.getsize(fullname)
+            filesmatadata[hashcode] = fname
+            metalist.append((fname, hashcode, fsize))
+            if DEBUG:
+                print fname, hashcode, fsize
+    return filesmatadata, metalist
 
 # main program start here:
 if DEBUG:
@@ -40,6 +71,7 @@ s.listen(10)
 if DEBUG:
     print 'Socket now listening'
 
+"""
 # read files matadata for future response
 filesmatadata = {}
 with open(METADATA_FILE, 'r') as f:
@@ -48,9 +80,12 @@ with open(METADATA_FILE, 'r') as f:
         filesmatadata[fname] = hashcode + ' ' + fsize
         if DEBUG:
             print line,
+"""
+filesmatadata, metalist = scanfiles(DIR_PATH)
 
 def sendfile(clientsocket, filename):
-    fn = DIR_PATH + filename
+    # need to add file type
+    fn = DIR_PATH + filename + ".mp4"
     # if requested file exists
     if os.path.exists(fn):
         if DEBUG:
@@ -74,7 +109,7 @@ def sendfile(clientsocket, filename):
 
 def sendfilelist(clientsocket):
     clientsocket.send("returnfilelist")
-    clientsocket.send(json.dumps(filesmatadata))
+    clientsocket.send(json.dumps(metalist))
 
 #Function for handling connections. This will be used to create threads
 def clientthread_handler(clientsocket):
@@ -90,19 +125,19 @@ def clientthread_handler(clientsocket):
             if '\t' in data:
                 msg = data.split('\t')
                 msgtype = msg[0]
-                fname = msg[1]
+                hashcode = msg[1]
             else:
                 msgtype = data
 
             if DEBUG:
                 print "server received data : ", data
                 print 'msgtype = ', msgtype
-                print 'fname = ', fname
+                print 'hashcode = ', hashcode
 
             # deal with request of metadata
             if msgtype == 'getmeta':
                 try:
-                    metadata = filesmatadata[fname]
+                    metadata = hashcode
                     if DEBUG:
                         print 'send meata data: ', metadata
                     clientsocket.send('returnmeta')
@@ -112,6 +147,7 @@ def clientthread_handler(clientsocket):
 
             # deal with request of file
             elif msgtype == 'getfile':
+                fname = filesmatadata[hashcode]
                 sendfile(clientsocket, fname)
             elif msgtype == 'getfilelist':
                 sendfilelist(clientsocket)
