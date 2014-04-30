@@ -1,0 +1,6 @@
+maxpeers:5
+serverport:3344
+hops:2
+host:128.237.245.73
+port:3355
+logfile:logfile

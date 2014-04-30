@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml" dir="ltr">
+<head>
+	<title>Distributed Branch Cache Demo</title>
+	 <script type="text/javascript">
+  		document.createElement('video');
+  		document.createElement('audio');
+  		document.createElement('track');
+	   </script>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	
+	<link href="{{STATIC_URL}}js/video-js/video-js.css" rel="stylesheet">
+	<link href="{{STATIC_URL}}css/screen.css" rel="stylesheet">
+	<link rel="stylesheet" href="{{STATIC_URL}}css/style.css" type="text/css" media="all" />
+	<script type="text/javascript" src="{{STATIC_URL}}js/jquery-1.4.2.min.js"></script>
+	<script type="text/javascript" src="{{STATIC_URL}}js/jquery-func.js"></script>
+	<script src="{{STATIC_URL}}js/video-js/video.js"></script>
+	<script src="{{STATIC_URL}}js/jquery.knob.js"></script>
+	<script type="text/javascript">
+		window.paceOptions= {
+			startOnPageLoad : true,
+			ghostTime: 1000
+		};
+	</script>
+	<script src="{{STATIC_URL}}js/pace.min.js"></script>
+</head>
+<body>
+<!-- Shell -->
+<div id="shell">
+	<!-- Header -->
+	<div id="header">
+		<div id="sub-navigation">
+			<ul>
+			    <li><a href="#">TEAM 19</a></li>
+			    <li><a href="#">Guanchao Wang</a></li>
+			    <li><a href="#">Jacky Chen</a></li>
+			    <li><a href="#">Ke Li</a></li>
+			</ul>
+			<div id="search">
+				<form action="/" method="get">
+        			<input type="text" name="q" style="visibility: hidden;" class="blink search-field" >
+    			</form>
+			</div>
+		</div>
+		<!-- end Sub-Menu -->
+	</div>
+	<!-- end Header -->
+	
+	<!-- Main -->
+	<div id="main">
+		<!-- Content -->
+		<div id="content">
+				<video id="demo_video" class="video-js vjs-default-skin vjs-big-play-centered " width="100%" height="520"
+				poster="{{STATIC_URL}}img/poster.png"
+				data-setup='{ "controls": true, "autoplay": false, "preload": "auto"}'
+				src="{{STATIC_URL}}cache_path/6fb8d023f6d6ec4cd63405a97d5b924c"/>
+  				</video>
+				<!-- </div> -->
+			<!-- Box -->
+			<div class="box">
+				<div class="head">
+					<h2>ALL FILM LISTS</h2>
+					<p class="text-right"><a href="#">See all</a></p>
+				</div>
+				<!-- Movie List -->
+				{% for movie_name, movie_hashcode, movie_size in movie_list %}
+				<div class="movie">
+					
+					<div id= "{{movie_hashcode}}" class="movie-image" data-filesize="{{movie_size}}">
+						<a href="#"><span class="play"><span class="name">{{movie_name}}</span></span><img src="{{STATIC_URL}}css/images/{{movie_name}}.jpg" alt="movie" /></a>
+					</div>
+						
+					<div class="rating">
+						<p>RATING</p>
+						<div class="stars">
+							<div class="stars-in">
+							</div>
+						</div>
+						<span class="comments">12</span>
+					</div>
+				</div>
+				{% endfor %}
+				<!-- end Movie -->
+				<!-- Movie -->
+				<div class="cl">&nbsp;</div>
+			<!-- end Box -->
+			</div>
+		</div>
+		<div class="cl">&nbsp;</div>
+	</div>
+	<!-- end Main -->
+</div>
+<!-- end Shell -->
+<script>
+	$(document).ready(function(){
+		$("#sub-navigation").click(function(event){
+			$(".vjs-poster").css("background-image", "url(/static/img/ajax-loader.gif)");
+		});
+
+		$(".text-right").click(function(event){
+			$(".vjs-poster").css("background-image", "url(/static/img/poster.png)");
+		});
+
+		$(".movie-image").click(function(event){
+			Pace.restart();
+			var hashcode = event.currentTarget.id;
+			var filesize = $('#'+hashcode).attr('data-filesize');
+			var url = '/search/'+hashcode+'/'+filesize
+			
+			$.get(url,function(data) {
+				$(".vjs-poster").css("background-image", "url(/static/img/ajax-loader.gif)");
+				if (data["success"] == "success") {
+					$(".vjs-poster").css("background-image", "url(/static/img/poster.png)");
+					// alert("video loading ready!");
+					$("#demo_video_html5_api").attr("src", "/static/cache_path/"+hashcode);
+					$("#demo_video_html5_api")[0].play();
+				}else {
+					alert("video not found!");
+					location.reload();
+				}
+			} )
+			
+		});
+	});
+
+</script>	
+</body>
+</html>
